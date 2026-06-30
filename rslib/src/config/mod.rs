@@ -72,6 +72,9 @@ pub(crate) enum ConfigKey {
     #[strum(to_string = "schedVer")]
     SchedulerVersion,
     CustomColorPickerPalette,
+    /// Speedrun: ordered list of topic tags the interleaving scheduler mixes
+    /// across (e.g. ["mcat::biobiochem", "mcat::chemphys", "mcat::psychsoc"]).
+    InterleaveTopicTags,
 }
 
 #[derive(PartialEq, Eq, Serialize_repr, Deserialize_repr, Clone, Copy, Debug)]
@@ -297,6 +300,18 @@ impl Collection {
 
     pub(crate) fn set_backup_limits(&mut self, limits: BackupLimits) -> Result<()> {
         self.set_config(ConfigKey::Backups, &limits).map(|_| ())
+    }
+
+    /// Speedrun: ordered topic tags the interleaving scheduler mixes across.
+    /// Empty when unset.
+    pub(crate) fn get_interleave_topic_tags(&self) -> Vec<String> {
+        self.get_config_optional(ConfigKey::InterleaveTopicTags)
+            .unwrap_or_default()
+    }
+
+    pub(crate) fn set_interleave_topic_tags(&mut self, tags: &[String]) -> Result<()> {
+        self.set_config(ConfigKey::InterleaveTopicTags, &tags)
+            .map(|_| ())
     }
 
     pub(crate) fn get_update_notes(&self) -> UpdateCondition {

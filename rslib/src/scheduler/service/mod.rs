@@ -382,6 +382,25 @@ impl crate::services::SchedulerService for Collection {
             delta_days: self.get_fuzz_delta(input.card_id.into(), input.interval)?,
         })
     }
+
+    fn set_interleave_config(
+        &mut self,
+        input: scheduler::InterleaveConfig,
+    ) -> Result<anki_proto::collection::OpChanges> {
+        self.transact(Op::UpdateConfig, |col| {
+            col.set_config_bool_inner(BoolKey::InterleaveTopics, input.enabled)?;
+            col.set_interleave_topic_tags(&input.topic_tags)?;
+            Ok(())
+        })
+        .map(Into::into)
+    }
+
+    fn get_interleave_config(&mut self) -> Result<scheduler::InterleaveConfig> {
+        Ok(scheduler::InterleaveConfig {
+            enabled: self.get_config_bool(BoolKey::InterleaveTopics),
+            topic_tags: self.get_interleave_topic_tags(),
+        })
+    }
 }
 
 impl crate::services::BackendSchedulerService for Backend {

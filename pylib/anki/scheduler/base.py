@@ -21,6 +21,7 @@ ScheduleCardsAsNew = scheduler_pb2.ScheduleCardsAsNewRequest
 ScheduleCardsAsNewDefaults = scheduler_pb2.ScheduleCardsAsNewDefaultsResponse
 FilteredDeckForUpdate = decks_pb2.FilteredDeckForUpdate
 RepositionDefaults = scheduler_pb2.RepositionDefaultsResponse
+InterleaveConfig = scheduler_pb2.InterleaveConfig
 
 from collections.abc import Sequence
 from typing import overload
@@ -58,6 +59,19 @@ class SchedulerBase(DeprecatedNamesMixin):
     @property
     def day_cutoff(self) -> int:
         return self._timing_today().next_day_at
+
+    # Speedrun: topic-aware interleaving
+    ##########################################################################
+
+    def get_interleave_config(self) -> InterleaveConfig:
+        return self.col._backend.get_interleave_config()
+
+    def set_interleave_config(
+        self, enabled: bool, topic_tags: Sequence[str]
+    ) -> OpChanges:
+        return self.col._backend.set_interleave_config(
+            InterleaveConfig(enabled=enabled, topic_tags=topic_tags)
+        )
 
     def countIdx(self, card: Card) -> int:
         if card.queue in (QUEUE_TYPE_DAY_LEARN_RELEARN, QUEUE_TYPE_PREVIEW):

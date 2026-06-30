@@ -3,6 +3,7 @@
 
 mod burying;
 mod gathering;
+mod interleaving;
 pub(crate) mod intersperser;
 pub(crate) mod sized_chain;
 mod sorting;
@@ -110,6 +111,11 @@ pub(super) struct QueueBuilder {
     pub(super) day_learning: Vec<DueCard>,
     limits: LimitTreeMap,
     load_balancer: Option<LoadBalancer>,
+    /// Speedrun: maps a gathered card's note to its topic index (the position
+    /// of the first matching tag in `Context::topic_tags`). Notes that match no
+    /// configured topic are absent. Populated by `resolve_topics()` after
+    /// gathering, and consumed by the topic-interleaving reorder in `build()`.
+    topic_map: HashMap<NoteId, usize>,
     context: Context,
 }
 
@@ -123,6 +129,11 @@ struct Context {
     seen_note_ids: HashMap<NoteId, BuryMode>,
     deck_map: HashMap<DeckId, Deck>,
     fsrs: bool,
+    /// Speedrun: whether topic-aware interleaving is enabled for this build.
+    interleave_topics: bool,
+    /// Speedrun: ordered topic tags to interleave across (round-robin follows
+    /// this order). Empty disables interleaving regardless of the flag above.
+    topic_tags: Vec<String>,
 }
 
 impl QueueBuilder {
@@ -171,6 +182,7 @@ impl QueueBuilder {
             day_learning: Vec::new(),
             limits,
             load_balancer,
+            topic_map: HashMap::new(),
             context: Context {
                 timing,
                 config_map,
@@ -179,12 +191,21 @@ impl QueueBuilder {
                 seen_note_ids: HashMap::new(),
                 deck_map,
                 fsrs: col.get_config_bool(BoolKey::Fsrs),
+                interleave_topics: col.get_config_bool(BoolKey::InterleaveTopics),
+                topic_tags: col.get_interleave_topic_tags(),
             },
         })
     }
 
     pub(super) fn build(mut self, learn_ahead_secs: i64) -> CardQueues {
         self.sort_new();
+
+        // Speedrun: mix due/new cards across MCAT topics. This only reorders the
+        // already-gathered, already-sorted cards (never touching due dates,
+        // intervals, or memory state), so FSRS scheduling stays valid. Runs after
+        // sort_new() so a topic's internal order matches the configured new-card
+        // sort.
+        self.interleave_by_topic();
 
         // intraday learning and total learn count
         let intraday_learning = sort_learning(self.learning);
@@ -286,6 +307,9 @@ impl Collection {
             .update_active_decks(&queues.context.root_deck)?;
 
         queues.gather_cards(self)?;
+        // Speedrun: resolve each gathered card's topic while the collection is
+        // available; the reorder itself happens later in build().
+        queues.resolve_topics(self)?;
 
         let queues = queues.build(self.learn_ahead_secs() as i64);
 
@@ -295,6 +319,9 @@ impl Collection {
 
 #[cfg(test)]
 mod test {
+    use std::collections::HashMap;
+    use std::collections::HashSet;
+
     use anki_proto::deck_config::deck_config::config::NewCardGatherPriority;
     use anki_proto::deck_config::deck_config::config::NewCardSortOrder;
 
@@ -542,5 +569,145 @@ mod test {
         CardAdder::new().deck(child.id).add(&mut col);
         col.set_current_deck(child.id).unwrap();
         assert_eq!(col.card_queue_len(), 0);
+    }
+
+    // Speedrun: topic-aware interleaving tests.
+
+    const TOPIC_TAGS: [&str; 3] = ["mcat::a", "mcat::b", "mcat::c"];
+
+    impl Collection {
+        /// Add a due review card on the default deck, tagged with `tag`, with
+        /// the given interval/due. Returns its card id.
+        fn add_tagged_review_card(&mut self, tag: &str, interval: u32, due: i32) -> CardId {
+            let nt = self.get_notetype_by_name("Basic").unwrap().unwrap();
+            let mut note = nt.new_note();
+            note.set_field(0, "q").unwrap();
+            note.tags = vec![tag.to_string()];
+            self.add_note(&mut note, DeckId(1)).unwrap();
+            let mut card = self
+                .storage
+                .get_card_by_ordinal(note.id, 0)
+                .unwrap()
+                .unwrap();
+            card.interval = interval;
+            card.due = due;
+            card.ctype = CardType::Review;
+            card.queue = CardQueue::Review;
+            let cid = card.id;
+            self.update_cards_maybe_undoable(vec![card], false).unwrap();
+            cid
+        }
+
+        fn enable_interleaving(&mut self) {
+            self.set_config_bool(BoolKey::InterleaveTopics, true, false)
+                .unwrap();
+            self.set_interleave_topic_tags(
+                &TOPIC_TAGS.iter().map(|t| t.to_string()).collect::<Vec<_>>(),
+            )
+            .unwrap();
+        }
+
+        fn queue_card_ids(&mut self, deck_id: DeckId) -> Vec<CardId> {
+            self.build_queues(deck_id)
+                .unwrap()
+                .iter()
+                .map(|entry| entry.card_id())
+                .collect()
+        }
+    }
+
+    /// The queue should round-robin across the configured topics, regardless of
+    /// the order the cards were gathered in.
+    #[test]
+    fn interleaving_round_robins_topics() {
+        let mut col = Collection::new();
+        // Pin review order to insertion order (card-id ascending) so the
+        // un-interleaved order is deterministically topic-blocked.
+        let mut deck = col.get_or_create_normal_deck("Default").unwrap();
+        col.set_deck_review_order(&mut deck, ReviewCardOrder::Added);
+        col.enable_interleaving();
+
+        // 3 cards per topic, added grouped by topic, so a passing round-robin
+        // assertion can't be an accident of insertion order.
+        let mut topic_of: HashMap<CardId, usize> = HashMap::new();
+        for (idx, tag) in TOPIC_TAGS.iter().enumerate() {
+            for _ in 0..3 {
+                let cid = col.add_tagged_review_card(tag, 10, 0);
+                topic_of.insert(cid, idx);
+            }
+        }
+
+        let topics: Vec<usize> = col
+            .queue_card_ids(DeckId(1))
+            .iter()
+            .map(|cid| topic_of[cid])
+            .collect();
+        assert_eq!(topics, vec![0, 1, 2, 0, 1, 2, 0, 1, 2]);
+
+        // Disabling the toggle restores topic-blocked order.
+        col.set_config_bool(BoolKey::InterleaveTopics, false, false)
+            .unwrap();
+        let topics: Vec<usize> = col
+            .queue_card_ids(DeckId(1))
+            .iter()
+            .map(|cid| topic_of[cid])
+            .collect();
+        assert_eq!(topics, vec![0, 0, 0, 1, 1, 1, 2, 2, 2]);
+    }
+
+    /// Interleaving only reorders: it must not change any card's due date or
+    /// interval, and must gather the same set of cards as a non-interleaved
+    /// build.
+    #[test]
+    fn interleaving_preserves_fsrs_scheduling() {
+        let mut col = Collection::new();
+
+        // distinct (interval, due) per card so a mutation would be visible
+        let mut expected: HashMap<CardId, (i32, u32)> = HashMap::new();
+        for (i, tag) in TOPIC_TAGS.iter().enumerate() {
+            for j in 0..3u32 {
+                let interval = 10 + (i as u32) * 3 + j;
+                let due = 0; // all due today
+                let cid = col.add_tagged_review_card(tag, interval, due);
+                expected.insert(cid, (due, interval));
+            }
+        }
+
+        let plain: HashSet<CardId> = col.queue_card_ids(DeckId(1)).into_iter().collect();
+        col.enable_interleaving();
+        let interleaved: HashSet<CardId> = col.queue_card_ids(DeckId(1)).into_iter().collect();
+
+        // same cards gathered either way
+        assert_eq!(interleaved, plain);
+        // due/interval untouched by the reorder
+        for (cid, (due, interval)) in expected {
+            let card = col.storage.get_card(cid).unwrap().unwrap();
+            assert_eq!((card.due, card.interval), (due, interval));
+        }
+    }
+
+    /// Answering a card from an interleaved queue must remain fully undoable.
+    #[test]
+    fn interleaving_keeps_undo_intact() {
+        let mut col = Collection::new();
+        col.enable_interleaving();
+        for tag in TOPIC_TAGS.iter() {
+            col.add_tagged_review_card(tag, 10, 0);
+        }
+
+        col.clear_study_queues();
+        let cid = col.get_next_card().unwrap().unwrap().card.id;
+        let before = col.storage.get_card(cid).unwrap().unwrap();
+
+        col.answer_good();
+        let after = col.storage.get_card(cid).unwrap().unwrap();
+        assert_ne!(after.reps, before.reps, "answering should change the card");
+
+        col.undo().unwrap();
+        let restored = col.storage.get_card(cid).unwrap().unwrap();
+        assert_eq!(restored.reps, before.reps);
+        assert_eq!(restored.due, before.due);
+        assert_eq!(restored.interval, before.interval);
+        assert_eq!(restored.ctype, before.ctype);
     }
 }

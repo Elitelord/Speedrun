@@ -74,6 +74,11 @@ pub fn run_build(args: BuildArgs) {
         // commands will not show colors by default, as we do not provide a tty
         .env("FORCE_COLOR", "1")
         .env("MYPY_FORCE_COLOR", "1")
+        // Force UTF-8 for Python subprocesses so tools that print non-ASCII
+        // (e.g. complexipy's ❌/✅ status glyphs) don't crash on Windows, where
+        // the default console encoding is cp1252.
+        .env("PYTHONUTF8", "1")
+        .env("PYTHONIOENCODING", "utf-8")
         .env("TERM", std::env::var("TERM").unwrap_or_default());
     if env::var("NINJA_STATUS").is_err() {
         command.env("NINJA_STATUS", "[%f/%t; %r active; %es] ");

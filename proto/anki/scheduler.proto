@@ -64,6 +64,10 @@ service SchedulerService {
   // The number of days the calculated interval was fuzzed by on the previous
   // review (if any). Utilized by the FSRS add-on.
   rpc FuzzDelta(FuzzDeltaRequest) returns (FuzzDeltaResponse);
+  // Speedrun: enable/disable topic-aware interleaving and set the ordered topic
+  // tags the queue builder mixes across.
+  rpc SetInterleaveConfig(InterleaveConfig) returns (collection.OpChanges);
+  rpc GetInterleaveConfig(generic.Empty) returns (InterleaveConfig);
 }
 
 // Implicitly includes any of the above methods that are not listed in the
@@ -473,6 +477,15 @@ message ComputeMemoryStateResponse {
   optional cards.FsrsMemoryState state = 1;
   float desired_retention = 2;
   float decay = 3;
+}
+
+// Speedrun: topic-aware interleaving configuration (collection-level, so it is
+// read by the shared engine on both desktop and Android).
+message InterleaveConfig {
+  bool enabled = 1;
+  // Ordered topic tags to interleave across (round-robin follows this order),
+  // e.g. ["mcat::biobiochem", "mcat::chemphys", "mcat::psychsoc"].
+  repeated string topic_tags = 2;
 }
 
 message FuzzDeltaRequest {

@@ -23,12 +23,17 @@ impl Build {
         .unwrap();
 
         writeln!(&mut buf, "builddir = {}", self.buildroot.as_str()).unwrap();
-        writeln!(
-            &mut buf,
-            "runner = $builddir/rust/release/{}",
-            with_exe("runner")
-        )
-        .unwrap();
+        // n2 on Windows spawns a rule's command directly via CreateProcess,
+        // which cannot resolve a relative executable path that uses forward
+        // slashes. Since almost every rule invokes `$runner`, emit it with
+        // native separators so the build works under n2 on Windows.
+        let runner_path = format!("$builddir/rust/release/{}", with_exe("runner"));
+        let runner_path = if cfg!(windows) {
+            runner_path.replace('/', "\\")
+        } else {
+            runner_path
+        };
+        writeln!(&mut buf, "runner = {runner_path}").unwrap();
         for (key, value) in &self.variables {
             writeln!(&mut buf, "{key} = {value}").unwrap();
         }
