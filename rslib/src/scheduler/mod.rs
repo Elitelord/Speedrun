@@ -11,6 +11,7 @@ pub mod bury_and_suspend;
 pub(crate) mod congrats;
 pub(crate) mod filtered;
 pub mod fsrs;
+pub(crate) mod memory_score;
 pub mod new;
 pub(crate) mod queue;
 mod reviews;
@@ -18,6 +19,7 @@ mod service;
 pub mod states;
 pub mod timespan;
 pub mod timing;
+pub(crate) mod topics;
 mod upgrade;
 
 use chrono::FixedOffset;

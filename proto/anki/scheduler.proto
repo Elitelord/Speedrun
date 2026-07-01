@@ -68,6 +68,9 @@ service SchedulerService {
   // tags the queue builder mixes across.
   rpc SetInterleaveConfig(InterleaveConfig) returns (collection.OpChanges);
   rpc GetInterleaveConfig(generic.Empty) returns (InterleaveConfig);
+  // Speedrun: honest memory score (mean FSRS retrievability + uncertainty band
+  // + give-up rule) for a deck/search, broken down by topic tag.
+  rpc ComputeMemoryScore(MemoryScoreRequest) returns (MemoryScoreResponse);
 }
 
 // Implicitly includes any of the above methods that are not listed in the
@@ -486,6 +489,42 @@ message InterleaveConfig {
   // Ordered topic tags to interleave across (round-robin follows this order),
   // e.g. ["mcat::biobiochem", "mcat::chemphys", "mcat::psychsoc"].
   repeated string topic_tags = 2;
+}
+
+// Speedrun: honest memory score.
+message MemoryScoreRequest {
+  // Base search selecting the cards to score, e.g. "deck:MCAT". Empty = whole
+  // collection.
+  string search = 1;
+  // Topic tags to break the score down by (same tags the interleaver uses).
+  repeated string topic_tags = 2;
+  // Give-up thresholds: hide a topic score below this many graded reviews
+  // (0 = default 20) and the overall/deck score below this many (0 = default
+  // 100).
+  uint32 topic_min_reviews = 3;
+  uint32 deck_min_reviews = 4;
+}
+
+message MemoryScore {
+  // Topic tag this score is for; empty for the overall/deck score.
+  string label = 1;
+  // Mean FSRS predicted recall over cards with memory state, 0..1.
+  float estimate = 2;
+  // Uncertainty band (widens with fewer graded reviews), each clamped to 0..1.
+  float range_low = 3;
+  float range_high = 4;
+  uint32 graded_reviews = 5;
+  uint32 card_count = 6;
+  uint32 cards_with_state = 7;
+  // False when below the give-up threshold: not enough data to show a score.
+  bool shown = 8;
+  // Most recent review time across these cards, unix seconds (0 if none).
+  int64 last_review_secs = 9;
+}
+
+message MemoryScoreResponse {
+  MemoryScore overall = 1;
+  repeated MemoryScore topics = 2;
 }
 
 message FuzzDeltaRequest {

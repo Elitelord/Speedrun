@@ -22,6 +22,7 @@ ScheduleCardsAsNewDefaults = scheduler_pb2.ScheduleCardsAsNewDefaultsResponse
 FilteredDeckForUpdate = decks_pb2.FilteredDeckForUpdate
 RepositionDefaults = scheduler_pb2.RepositionDefaultsResponse
 InterleaveConfig = scheduler_pb2.InterleaveConfig
+MemoryScoreResponse = scheduler_pb2.MemoryScoreResponse
 
 from collections.abc import Sequence
 from typing import overload
@@ -71,6 +72,20 @@ class SchedulerBase(DeprecatedNamesMixin):
     ) -> OpChanges:
         return self.col._backend.set_interleave_config(
             InterleaveConfig(enabled=enabled, topic_tags=topic_tags)
+        )
+
+    def compute_memory_score(
+        self,
+        search: str,
+        topic_tags: Sequence[str],
+        topic_min_reviews: int = 0,
+        deck_min_reviews: int = 0,
+    ) -> MemoryScoreResponse:
+        return self.col._backend.compute_memory_score(
+            search=search,
+            topic_tags=topic_tags,
+            topic_min_reviews=topic_min_reviews,
+            deck_min_reviews=deck_min_reviews,
         )
 
     def countIdx(self, card: Card) -> int:

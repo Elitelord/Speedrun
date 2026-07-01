@@ -401,6 +401,13 @@ impl crate::services::SchedulerService for Collection {
             topic_tags: self.get_interleave_topic_tags(),
         })
     }
+
+    fn compute_memory_score(
+        &mut self,
+        input: scheduler::MemoryScoreRequest,
+    ) -> Result<scheduler::MemoryScoreResponse> {
+        self.compute_memory_score(input)
+    }
 }
 
 impl crate::services::BackendSchedulerService for Backend {

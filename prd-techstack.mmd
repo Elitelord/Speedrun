@@ -1,0 +1,33 @@
+flowchart TB
+    subgraph proto["proto/ — Protobuf API"]
+        P["RPC messages<br/>NEW: Interleave config/toggle"]
+    end
+
+    subgraph rust["rslib/ — Rust core engine (shared)"]
+        SCHED["scheduler/queue/builder<br/>★ interleaving order (NEW)"]
+        FSRS["scheduler/fsrs<br/>memory state → recall %"]
+        STORE["storage/ → SQLite collection"]
+        SCHED --> STORE
+        FSRS --> STORE
+    end
+
+    subgraph desktop["Desktop app (Windows)"]
+        BRIDGE["pylib/rsbridge (PyO3)"]
+        PY["pylib (anki) + qt/aqt (PyQt)"]
+        TS["ts/ — Svelte + TS<br/>★ memory dashboard +<br/>cleaned review UI (NEW)"]
+        BRIDGE --> PY --> TS
+    end
+
+    subgraph android["Android companion"]
+        DROID["AnkiDroid (Kotlin)<br/>loads MCAT deck, real reviews"]
+    end
+
+    P --> rust
+    rust --> BRIDGE
+    rust -. "shared engine (same Rust backend)" .-> DROID
+
+    INSTALL["Desktop installer<br/>(clean-machine install)"]
+    PY --> INSTALL
+
+    classDef new fill:#d8f5e3,stroke:#2a7,stroke-width:2px;
+    class SCHED,TS,P new;

@@ -1301,6 +1301,30 @@ title="{}" {}>{}</button>""".format(
     def onOverview(self) -> None:
         self.moveToState("overview")
 
+    def on_memory_dashboard(self) -> None:
+        from aqt.memory_dashboard import MemoryDashboardDialog
+
+        MemoryDashboardDialog(self)
+
+    def _sync_interleave_action(self) -> None:
+        # Reflect the current collection config in the menu checkmark.
+        if self.col:
+            self.action_interleave.setChecked(
+                self.col.sched.get_interleave_config().enabled
+            )
+
+    def on_toggle_interleave(self, checked: bool) -> None:
+        if not self.col:
+            return
+        config = self.col.sched.get_interleave_config()
+        tags = list(config.topic_tags) or [
+            "mcat::biobiochem",
+            "mcat::chemphys",
+            "mcat::psychsoc",
+        ]
+        self.col.sched.set_interleave_config(enabled=checked, topic_tags=tags)
+        self.reset()
+
     def onStats(self) -> None:
         deck = self._selectedDeck()
         if not deck:
@@ -1447,6 +1471,18 @@ title="{}" {}>{}</button>""".format(
         qconnect(m.actionNoteTypes.triggered, self.onNoteTypes)
         qconnect(m.action_check_for_updates.triggered, self.on_check_for_updates)
         qconnect(m.actionPreferences.triggered, self.onPrefs)
+
+        # Speedrun: MCAT honest memory-score dashboard
+        self.action_memory_dashboard = QAction("MCAT Memory", self)
+        qconnect(self.action_memory_dashboard.triggered, self.on_memory_dashboard)
+        m.menuTools.addAction(self.action_memory_dashboard)
+
+        # Speedrun: topic-aware interleaving toggle
+        self.action_interleave = QAction("Interleave MCAT topics", self)
+        self.action_interleave.setCheckable(True)
+        qconnect(self.action_interleave.triggered, self.on_toggle_interleave)
+        m.menuTools.addAction(self.action_interleave)
+        qconnect(m.menuTools.aboutToShow, self._sync_interleave_action)
 
         # View
         qconnect(

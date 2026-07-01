@@ -5,6 +5,10 @@
 > `just --list` to see them. Do not invoke `./ninja`, `./run`, or scripts
 > under `./tools` directly — use the `just` recipes instead.
 
+> **Finding code:** This repo is large. To locate where functionality lives,
+> consult the codebase map at `codebase-map/README.md` (a per-area table of
+> contents) before grepping broadly. See also `CODEBASE_MAP.md` at the root.
+
 ## Project Overview
 
 Anki is a spaced repetition flashcard program with a multi-layered architecture. Main components:
