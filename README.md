@@ -48,7 +48,43 @@ Anki (and therefore Speedrun) is multi-layered:
 - **Android** — a separate AnkiDroid-based fork whose backend is compiled from
   this same Rust engine (see below).
 
-## Building & running
+## Download & install (prebuilt)
+
+Prebuilt installers are attached to the
+[latest GitHub Release](../../releases/latest).
+
+**Desktop (Windows):**
+
+1. Download `anki-26.05-win-x64.msi` from the release.
+2. Double-click it and follow the installer. The build is unsigned, so Windows
+   SmartScreen may warn — choose **More info → Run anyway**.
+3. Launch **Anki** from the Start menu.
+
+**Android:**
+
+- **Physical device:** download `AnkiDroid-play-arm64-v8a-debug.apk`, allow
+  "Install unknown apps" for your browser/file manager, then open the file to
+  install.
+- **Emulator (x86_64):** download `AnkiDroid-play-x86_64-debug.apk` and install
+  with `adb install -r AnkiDroid-play-x86_64-debug.apk`.
+
+**After installing (both platforms):** the desktop and Android apps are
+**separate collections**, so import the MCAT deck
+(`docs/speedrun/seed-deck/MCAT.apkg`) on each. Then, in **Deck options**, raise
+**New cards/day** so all three topics appear, and enable **FSRS** to power the
+memory score. Turn interleaving on via **Tools → "Interleave MCAT topics"**
+(desktop) or the DeckPicker overflow menu (Android).
+
+## Build from source
+
+### Prerequisites
+
+`git` plus the standard
+[Anki development prerequisites](./docs/development.md) — the build system
+downloads its own Rust / Python / Node toolchains through `just`, so there is
+little to install beyond that. Build from a normal shell at the repo root.
+
+### Desktop
 
 Everything is wrapped in `just` recipes (run `just --list` to see them all):
 
@@ -59,9 +95,9 @@ just test-rust # Rust tests   (includes the interleaving unit/integration tests)
 just test-py   # Python tests (includes pylib/tests/test_interleave.py)
 ```
 
-The desktop app requires a normal Anki dev toolchain; the build system downloads
-its own dependencies. For a packaged desktop build, the Windows installer is
-produced under `out/installer/dist/`.
+To produce the Windows installer yourself, **close any running Anki** (a running
+instance locks a build artifact), then run `tools/build-installer.bat`; the
+`.msi` is written to `out/installer/dist/`.
 
 ### Android
 
