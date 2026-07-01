@@ -15,7 +15,7 @@
 | Decision         | Choice                                                                                                                      | Rationale                                                                     |
 | ---------------- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | **MVP boundary** | MVP = Wednesday no-AI core only; all of the below is post-MVP.                                                              | Sequences scope by the assignment's phase gates.                              |
-| **Rust change**  | Topic-aware **interleaving scheduler**.                                                                                     | Doubles as the learning-science **study feature** we ablation-test (SPOV #1). |
+| **Rust change**  | Topic-aware **interleaving scheduler** (uniform + **weakness-weighted** modes, both shipped in the MVP).                    | Doubles as the learning-science **study feature** we ablation-test (SPOV #1). |
 | **CARS**         | **Post-MVP**; built as seeded/importable passages first, later feeds the **Performance** signal.                            | Brainlift SPOV #2; CARS is reasoning, not memorization.                       |
 | **Frontend**     | Stay on Anki's **Svelte + TS** stack; add new components only.                                                              | Max reuse, desktop/Android parity, lowest risk.                               |
 | **AI provider**  | **Cloud LLM API** (OpenAI/Anthropic) + **RAG-style grounding** over MCAT source text, with a rule/keyword baseline to beat. | Brief requires named source, eval, beating a baseline, and AI-off operation.  |
@@ -39,8 +39,44 @@
 - **AI-off invariant:** the app still gives a score with AI switched off; AI
   features turn off cleanly when the network/service is unavailable
   (offline, rate-limited, or broken output).
-- Addresses **Brainlift SPOV #3** (uncalibrated LLMs mislead overconfident
-  students): require sources, confidence, and explicit abstention.
+- **AI-safety guardrails** (Brainlift 4.5): LLM output is prone to ungrounded,
+  fabricated critique, so every AI feature requires source-grounding, held-out
+  evaluation, and explicit abstention. (This was formerly framed as its own
+  SPOV; it is now a cross-cutting requirement backing both AI features below.)
+
+### Free-text / production review loop (SPOV #3)
+
+- **The spiky bet:** MCAT study shouldn't be flip-cards that reveal the answer.
+  The user **types an answer**, an LLM **grades** it, and a wrong attempt gets a
+  scaffolded **hint → re-attempt → reveal** — never a silent flip. Card
+  reappearance is keyed to **how it was answered**, not a binary self-grade.
+- **Why:** production beats recognition (generation effect, Brainlift 3.6) and
+  moves review closer to how the MCAT actually tests; corrective feedback and
+  hypercorrection (3.6) make a wrong attempt a learning opportunity.
+- **Feasibility:** LLM short-answer grading now reaches near-human agreement
+  (Brainlift 4.6) — but only trustworthy with the 4.5 guardrails above
+  (rubric-grounding, eval, abstention).
+- **AI-off fallback:** with AI unavailable, degrade to self-graded reveal (the
+  classic flip) so the review loop still works offline.
+- Depends on the AI grounding + eval harness (this same gate). Backed by
+  **Brainlift SPOV #3** + Insights 3–4 under "Science of Effective Learning."
+
+### Seed deck depth — real MCAT-level content
+
+- **Problem:** the MVP seed deck (`docs/speedrun/seed-deck/`, 72 cards) is
+  **intro / high-school-level recall** ("what three particles make up an atom?")
+  — fine as demo filler to show interleaving, but **below MCAT difficulty**.
+- **Target:** rewrite/expand to **intro-college depth** the MCAT actually tests
+  — e.g. amino-acid side-chain pKa / charge at a given pH, enzyme kinetics
+  (Km/Vmax, inhibition), glycolysis intermediates, action-potential ion
+  mechanics, thermodynamics/circuits with calculation — and broaden topic
+  coverage toward the official MCAT content outline (ties to the coverage map,
+  7c).
+- **Format note:** discrete recall cards are the right shape for the **memory**
+  layer; passage-based _reasoning_ lives in the CARS/performance layer below.
+- **Mechanism:** author manually for the no-AI baseline, then use the AI
+  card-generation + eval harness (above) to scale, validating generated cards
+  against a human gold set (7f) before they ship.
 
 ### CARS practice module (seeded → AI later)
 

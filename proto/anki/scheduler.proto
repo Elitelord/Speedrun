@@ -489,6 +489,11 @@ message InterleaveConfig {
   // Ordered topic tags to interleave across (round-robin follows this order),
   // e.g. ["mcat::biobiochem", "mcat::chemphys", "mcat::psychsoc"].
   repeated string topic_tags = 2;
+  // When true, interleaving is weighted by measured weakness: topics with lower
+  // mean FSRS recall get proportionally more emission slots per pass, so study
+  // concentrates on not-yet-mastered material. When false, topics are mixed
+  // uniformly (plain round-robin).
+  bool weight_by_weakness = 3;
 }
 
 // Speedrun: honest memory score.

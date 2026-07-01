@@ -116,6 +116,11 @@ pub(super) struct QueueBuilder {
     /// configured topic are absent. Populated by `resolve_topics()` after
     /// gathering, and consumed by the topic-interleaving reorder in `build()`.
     topic_map: HashMap<NoteId, usize>,
+    /// Speedrun: per-topic emission weight for the interleaving round-robin
+    /// (same order as `Context::topic_tags`). All `1.0` for uniform mixing;
+    /// when weakness-weighting is on, weaker topics (lower mean FSRS recall)
+    /// get larger weights. Populated by `resolve_topics()`.
+    topic_weights: Vec<f32>,
     context: Context,
 }
 
@@ -134,6 +139,9 @@ struct Context {
     /// Speedrun: ordered topic tags to interleave across (round-robin follows
     /// this order). Empty disables interleaving regardless of the flag above.
     topic_tags: Vec<String>,
+    /// Speedrun: when true, weight the interleaving round-robin by measured
+    /// weakness (lower mean FSRS recall -> more frequent emission).
+    weight_by_weakness: bool,
 }
 
 impl QueueBuilder {
@@ -183,6 +191,7 @@ impl QueueBuilder {
             limits,
             load_balancer,
             topic_map: HashMap::new(),
+            topic_weights: Vec::new(),
             context: Context {
                 timing,
                 config_map,
@@ -193,6 +202,7 @@ impl QueueBuilder {
                 fsrs: col.get_config_bool(BoolKey::Fsrs),
                 interleave_topics: col.get_config_bool(BoolKey::InterleaveTopics),
                 topic_tags: col.get_interleave_topic_tags(),
+                weight_by_weakness: col.get_config_bool(BoolKey::InterleaveWeightByWeakness),
             },
         })
     }
@@ -607,6 +617,20 @@ mod test {
             .unwrap();
         }
 
+        /// Give a card an FSRS memory state and a last-review time `days_ago`,
+        /// so `compute_topic_weights` produces a real retrievability for it.
+        fn set_memory(&mut self, cid: CardId, stability: f32, days_ago: i64) {
+            use crate::card::FsrsMemoryState;
+            let mut card = self.storage.get_card(cid).unwrap().unwrap();
+            card.memory_state = Some(FsrsMemoryState {
+                stability,
+                difficulty: 5.0,
+            });
+            card.decay = Some(fsrs::FSRS5_DEFAULT_DECAY);
+            card.last_review_time = Some(TimestampSecs::now().adding_secs(-days_ago * 86_400));
+            self.storage.update_card(&card).unwrap();
+        }
+
         fn queue_card_ids(&mut self, deck_id: DeckId) -> Vec<CardId> {
             self.build_queues(deck_id)
                 .unwrap()
@@ -684,6 +708,62 @@ mod test {
             let card = col.storage.get_card(cid).unwrap().unwrap();
             assert_eq!((card.due, card.interval), (due, interval));
         }
+    }
+
+    /// With weakness weighting on, the topic with lower measured FSRS recall
+    /// gets more of the early slots; uniform weighting alternates evenly.
+    #[test]
+    fn weakness_weighting_front_loads_the_weak_topic() {
+        let mut col = Collection::new();
+        let mut deck = col.get_or_create_normal_deck("Default").unwrap();
+        col.set_deck_review_order(&mut deck, ReviewCardOrder::Added);
+        col.enable_interleaving();
+
+        // Topic a (index 0): low stability, long since review -> weak (low
+        // recall). Topic b (index 1): high stability, just reviewed -> strong.
+        let mut topic_of: HashMap<CardId, usize> = HashMap::new();
+        for _ in 0..3 {
+            let cid = col.add_tagged_review_card(TOPIC_TAGS[0], 10, 0);
+            col.set_memory(cid, 1.0, 30);
+            topic_of.insert(cid, 0);
+        }
+        for _ in 0..3 {
+            let cid = col.add_tagged_review_card(TOPIC_TAGS[1], 10, 0);
+            col.set_memory(cid, 500.0, 0);
+            topic_of.insert(cid, 1);
+        }
+
+        // Uniform interleaving: strict alternation a,b,a,b,a,b.
+        let uniform: Vec<usize> = col
+            .queue_card_ids(DeckId(1))
+            .iter()
+            .map(|cid| topic_of[cid])
+            .collect();
+        assert_eq!(uniform, vec![0, 1, 0, 1, 0, 1]);
+
+        // Turn on weakness weighting: the weak topic (0) is front-loaded, so its
+        // three cards all land in the first four slots.
+        col.set_config_bool(BoolKey::InterleaveWeightByWeakness, true, false)
+            .unwrap();
+        let weighted: Vec<usize> = col
+            .queue_card_ids(DeckId(1))
+            .iter()
+            .map(|cid| topic_of[cid])
+            .collect();
+        let weak_positions: Vec<usize> = weighted
+            .iter()
+            .enumerate()
+            .filter(|(_, &t)| t == 0)
+            .map(|(i, _)| i)
+            .collect();
+        assert!(
+            weak_positions.iter().all(|&p| p < 4),
+            "weak topic should be front-loaded, got order {weighted:?}"
+        );
+        assert_ne!(
+            weighted, uniform,
+            "weighted order must differ from uniform alternation"
+        );
     }
 
     /// Answering a card from an interleaved queue must remain fully undoable.

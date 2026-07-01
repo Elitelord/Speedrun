@@ -1307,22 +1307,42 @@ title="{}" {}>{}</button>""".format(
         MemoryDashboardDialog(self)
 
     def _sync_interleave_action(self) -> None:
-        # Reflect the current collection config in the menu checkmark.
+        # Reflect the current collection config in the menu checkmarks.
         if self.col:
-            self.action_interleave.setChecked(
-                self.col.sched.get_interleave_config().enabled
-            )
+            config = self.col.sched.get_interleave_config()
+            self.action_interleave.setChecked(config.enabled)
+            self.action_interleave_weakness.setChecked(config.weight_by_weakness)
+            # Weighting only matters when interleaving is on.
+            self.action_interleave_weakness.setEnabled(config.enabled)
+
+    def _default_topic_tags(self) -> list[str]:
+        config = self.col.sched.get_interleave_config()
+        return list(config.topic_tags) or [
+            "mcat::biobiochem",
+            "mcat::chemphys",
+            "mcat::psychsoc",
+        ]
 
     def on_toggle_interleave(self, checked: bool) -> None:
         if not self.col:
             return
         config = self.col.sched.get_interleave_config()
-        tags = list(config.topic_tags) or [
-            "mcat::biobiochem",
-            "mcat::chemphys",
-            "mcat::psychsoc",
-        ]
-        self.col.sched.set_interleave_config(enabled=checked, topic_tags=tags)
+        self.col.sched.set_interleave_config(
+            enabled=checked,
+            topic_tags=self._default_topic_tags(),
+            weight_by_weakness=config.weight_by_weakness,
+        )
+        self.reset()
+
+    def on_toggle_interleave_weakness(self, checked: bool) -> None:
+        if not self.col:
+            return
+        config = self.col.sched.get_interleave_config()
+        self.col.sched.set_interleave_config(
+            enabled=config.enabled,
+            topic_tags=self._default_topic_tags(),
+            weight_by_weakness=checked,
+        )
         self.reset()
 
     def onStats(self) -> None:
@@ -1482,6 +1502,15 @@ title="{}" {}>{}</button>""".format(
         self.action_interleave.setCheckable(True)
         qconnect(self.action_interleave.triggered, self.on_toggle_interleave)
         m.menuTools.addAction(self.action_interleave)
+        self.action_interleave_weakness = QAction(
+            "Weight interleaving by weakness", self
+        )
+        self.action_interleave_weakness.setCheckable(True)
+        qconnect(
+            self.action_interleave_weakness.triggered,
+            self.on_toggle_interleave_weakness,
+        )
+        m.menuTools.addAction(self.action_interleave_weakness)
         qconnect(m.menuTools.aboutToShow, self._sync_interleave_action)
 
         # View

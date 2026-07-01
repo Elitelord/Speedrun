@@ -68,10 +68,17 @@ class SchedulerBase(DeprecatedNamesMixin):
         return self.col._backend.get_interleave_config()
 
     def set_interleave_config(
-        self, enabled: bool, topic_tags: Sequence[str]
+        self,
+        enabled: bool,
+        topic_tags: Sequence[str],
+        weight_by_weakness: bool = False,
     ) -> OpChanges:
         return self.col._backend.set_interleave_config(
-            InterleaveConfig(enabled=enabled, topic_tags=topic_tags)
+            InterleaveConfig(
+                enabled=enabled,
+                topic_tags=topic_tags,
+                weight_by_weakness=weight_by_weakness,
+            )
         )
 
     def compute_memory_score(

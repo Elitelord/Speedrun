@@ -44,6 +44,9 @@ pub enum BoolKey {
     FsrsShortTermWithStepsEnabled,
     /// Speedrun: mix due/new cards across MCAT topics within a session.
     InterleaveTopics,
+    /// Speedrun: weight interleaving toward measured-weak topics (lower FSRS
+    /// recall) instead of mixing topics uniformly.
+    InterleaveWeightByWeakness,
     #[strum(to_string = "normalize_note_text")]
     NormalizeNoteText,
     #[strum(to_string = "dayLearnFirst")]

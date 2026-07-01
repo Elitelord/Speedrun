@@ -48,17 +48,17 @@ _Boundaries — what you will not focus on (prevents scope creep)._
 
 _A Spiky POV is a well-reasoned, actionable, often contrarian assertion forged by combining multiple DOK 3 Insights into a new mental model. Write your own below._
 
-- **Spiky POV 1:** _Interleaving should be the default in any MCAT study tool._
+- **Spiky POV 1:** _Weakness-Weighted Interleaving should be the default in any MCAT study tool._
 
-  - **Elaboration:** _The MCAT explicitly tests three major Scientific fields, Biology, Chemistry, and Psychology(1.1). Interleaving has been proven to be more effective than blocked learning(3.3). Interleaving is perfectly applied to MCAT study and should be the default to optimize the limited time many students have to learn to ensure they get the best results they can in all 3 subjects._
+  - **Elaboration:** _The MCAT explicitly tests three major Scientific fields, Biology, Chemistry, and Psychology(1.1). Interleaving has been proven to be more effective than blocked learning(3.3). Rather than just using regular Interleaving, which has been implemented in apps like Memm before, weakness-weighted interleaving can be stronger, as seen with Bjork's desirable difficulties._
 
 - **Spiky POV 2:** _Practice Problems for CARS can and should be integrated into Flashcard apps, especially for tests like the MCAT._
 
   - **Elaboration:** _Current study tools like Anki or Memm don’t attempt to prepare students for the CARS section(Critical reasoning)(2.5). I believe that with the power of LLM generation, this section can be covered with generated practice problems and passages._
 
-- **Spiky POV 3:** _Almost every current study tool app in the market with LLM features is lying to their customers_
+- **Spiky POV 3:** _MCAT Study shouldn't be based off Flipcards that show answers_
 
-  - **Elaboration:** _Study tools that integrate LLM almost always fail to account for the gaps that LLMs have with hallucinations in generation. Without proper safeguards and constraints, the potential for LLMs to effectively generate problems is rendered moot. These safeguards include but are not limited to giving up scenarios and confidence intervals._
+  - **Elaboration:** _Rather than Flipcards where the user's action is to just flip the card, the user should actually answer with text input answers, this can be graded with AI as well. Writing in the answer and receiving corrective feedback is proven to be effective for retention(3.6). Additionally, there is research into the capacity of LLMs to properly give feedback(4.6)._
 
 # **Experts**
 
@@ -212,11 +212,19 @@ _Your original conclusions/connections drawn from the sources, grouped by theme 
 
 - **Insight 2:** _Since students are unable to recognize their own gaps in most cases (3.1, 4.1), every existing ‘readiness’ percentage from MCAT tools would feel accurate. Showing the value accurately and explicitly is a big design requirement because of this._
 
+- **Insight 3:** _The strongest form of retrieval is production, not recognition. Flip-card apps reveal the answer, which the generation effect (3.6) and the learning-vs-performance gap (3.1) both predict will inflate fluency while under-building durable memory. Forcing a free-text answer converts review from recognition into production — much closer to how the MCAT actually tests (1.2), and the bridge from a memory score toward a performance score._
+
+- **Insight 4:** _A wrong free-text attempt is a learning opportunity, not a failure: corrective feedback after errors drives retention (Pashler 2005, 3.6) and confident errors are corrected especially well (hypercorrection, Metcalfe 2017, 3.6). The right design is therefore scaffolded hint → re-attempt → reveal the correct answer, and the card's reappearance should depend on how it was answered — not a binary self-graded flip._
+
+- **Insight 5:** _Self-directed study misallocates time — learners drop items they merely feel they know (region of proximal learning, 3.7) yet can't judge accurately (3.1, 4.1) — while mastery learning shows the largest gains come from concentrating effort on not-yet-mastered material (Bloom, 3.7). Combined with FSRS's measured retrievability as a weakness signal (2.2), this argues the scheduler should weight interleaving toward measured-weak, high-value topics rather than interleave uniformly or leave the choice to the student._
+
 #### _**From Model Readiness and AI Generation**_
 
 - **Insight 1:** _Student’s and models alike can be incredibly overconfident about their abilities while being wrong, this can be seen in test results and hallucinations. Putting uncalibrated LLM’s in front of these overconfident students doubles the potential for misconceptions._
 
 - **Insight 2:** _LLM’s have strong potential for question generation, yet proper testing hasn’t been done against human generated questions. The study in 4.4 that found 89% retention with ai problems vs 73% without any studying forgot to include human generated problems as a control baseline. Proper evaluation needs to be done when measuring these tool’s performance before integration._
+
+- **Insight 3:** _LLM grading of free-text answers is now accurate enough (near-human agreement, 4.6) to power a production-based review loop — but LLM feedback is prone to ungrounded, fabricated critique, so the same grounding, held-out evaluation, and abstention safeguards any AI feature needs (4.5) are precisely what make AI free-text grading trustworthy enough to sit at the center of the study loop._
 
 # **DOK 2: Knowledge Tree**
 
@@ -750,6 +758,80 @@ _The structured foundation of the BrainLift, organized from broad category to su
 
       - **Link to source:** [https://pubmed.ncbi.nlm.nih.gov/26173288/](https://pubmed.ncbi.nlm.nih.gov/26173288/)
 
+  - **Subcategory 3.6: Production, Generation & Corrective Feedback (why free-response beats flip-and-reveal)**
+
+    - "The generation effect: Delineation of a phenomenon" — Slamecka & Graf (1978), J. Experimental Psychology: Human Learning and Memory, 4(6), 592–604
+
+      - **DOK 1 \- Facts:**
+
+        - _Across five experiments, words that subjects generated themselves (from a rule + fragment/cue) were remembered better than the same words simply read._
+
+        - _The generate-over-read advantage held on cued and uncued recognition, free and cued recall, and confidence ratings, and persisted across encoding rules, timed vs. self-paced presentation, and within- vs. between-subject designs._
+
+      - **DOK 2 \- Summary:**
+
+        - _Producing an answer yourself builds stronger memory than reading/recognizing it — the foundational evidence for free-text entry over the show-the-answer flip card._
+
+      - **Link to source:** [https://andymatuschak.org/prompts/Slamecka1978.pdf](https://andymatuschak.org/prompts/Slamecka1978.pdf) _(verify)_
+
+    - "When does feedback facilitate learning of words?" — Pashler, Cepeda, Wixted & Rohrer (2005), J. Experimental Psychology: LMC, 31, 3–8
+
+      - **DOK 1 \- Facts:**
+
+        - _258 subjects learned Luganda–English pairs; after tests with varying feedback conditions, a final test followed one week later._
+
+        - _Supplying the correct answer after an incorrect response dramatically increased final retention (reported ~494%, nearly fivefold), whereas feedback after correct responses made little difference._
+
+      - **DOK 2 \- Summary:**
+
+        - _Corrective feedback after errors is what drives long-term retention._
+
+      - **Link to source:** [https://pubmed.ncbi.nlm.nih.gov/15641900/](https://pubmed.ncbi.nlm.nih.gov/15641900/) _(verify)_
+
+    - "Learning from Errors" (hypercorrection effect) — Metcalfe (2017), Annual Review of Psychology, 68, 465–489
+
+      - **DOK 1 \- Facts:**
+
+        - _Errorful learning followed by corrective feedback benefits retention; errors made with high confidence are corrected more readily than low-confidence errors (the hypercorrection effect)._
+
+        - _Caveat: high-confidence errors can return if the correct answer is later forgotten, so corrective feedback and re-review matter._
+
+      - **DOK 2 \- Summary:**
+
+        - _Getting it wrong and then being corrected is a powerful learning event (especially for confident errors)._
+
+      - **Link to source:** [https://www.annualreviews.org/content/journals/10.1146/annurev-psych-010416-044022](https://www.annualreviews.org/content/journals/10.1146/annurev-psych-010416-044022) _(verify)_
+
+  - **Subcategory 3.7: Self-Regulated Study & Mastery-Based Allocation (why the system, not the student, should target weakness)**
+
+    - "A Region of Proximal Learning model of study time allocation" — Metcalfe & Kornell (2005), J. Memory and Language; and "The promise and perils of self-regulated study" — Kornell & Bjork (2007), Psychonomic Bulletin & Review
+
+      - **DOK 1 \- Facts:**
+
+        - _Learners allocate study time by metacognitive judgments (judgments of learning): they choose not to study items they believe are already known, and prioritize items that are not-yet-known but seem learnable (the "region of proximal learning")._
+
+        - _Self-regulated study helps when monitoring is accurate, but it hinges on judgments that are frequently miscalibrated — learners drop items they merely feel they know._
+
+      - **DOK 2 \- Summary:**
+
+        - _Left to themselves, students steer study by "I know this" feelings and systematically under-study material they misjudge as learned; allocation based on a measured signal is more reliable than self-directed choice._
+
+      - **Link to source:** [http://www.columbia.edu/cu/psychology/metcalfe/PDFs/Metcalfe%20Kornell%202005.pdf](http://www.columbia.edu/cu/psychology/metcalfe/PDFs/Metcalfe%20Kornell%202005.pdf) ; [https://link.springer.com/article/10.3758/BF03194055](https://link.springer.com/article/10.3758/BF03194055) _(verify)_
+
+    - "The 2 Sigma Problem: The Search for Methods of Group Instruction as Effective as One-to-One Tutoring" — Bloom (1984), Educational Researcher, 13(6), 4–16 (+ mastery learning, Bloom 1968)
+
+      - **DOK 1 \- Facts:**
+
+        - _One-to-one tutoring combined with mastery learning produced roughly two standard deviations ("2 sigma") higher performance than conventional classroom instruction; the average tutored student scored above ~98% of conventionally taught students._
+
+        - _Mastery learning requires students to reach a mastery threshold on prerequisites (checked by regular tests) and to receive extra support on not-yet-mastered material before advancing._
+
+      - **DOK 2 \- Summary:**
+
+        - _The largest documented learning gains come from adaptively concentrating effort on what a student has not yet mastered — the core principle behind weighting review toward measured-weak topics._
+
+      - **Link to source:** [https://journals.sagepub.com/doi/10.3102/0013189X013006004](https://journals.sagepub.com/doi/10.3102/0013189X013006004) _(verify)_
+
 - **Category 4: Readiness, Calibration & Metacognition (the honest "what score would I get?" problem)**
 
   - **Subcategory 4.1: Metacognition & Overconfidence (why students misjudge readiness)**
@@ -837,3 +919,19 @@ _The structured foundation of the BrainLift, organized from broad category to su
         - _Summarizes different hallucination conditions among models and methods to mitigate hallucinations._
 
       - **Link to source:** [https://arxiv.org/abs/2202.03629](https://arxiv.org/abs/2202.03629) _(verify)_
+
+  - **Subcategory 4.6: Automated Free-Text / Short-Answer Grading (LLMs as the grader)**
+
+    - "Performance of GPT-4 on Automated Short Answer Grading" (2023) and LLM auto-assessment reviews (2024–25)
+
+      - **DOK 1 \- Facts:**
+
+        - _LLM graders (GPT-4 with prompt/rubric engineering) reach substantial agreement with human markers on short-answer grading (e.g., quadratic weighted kappa ≈ 0.68), and real deployments (e.g., a 100+ student course) report scoring and feedback comparable to human TAs._
+
+        - _Key limitation: LLM feedback can be unfaithful — fluent but not grounded in the student's actual answer (fabricated critiques), so grading needs rubrics, grounding, and held-out evaluation before it can be trusted._
+
+      - **DOK 2 \- Summary:**
+
+        - _AI can grade free-text answers at near-human agreement, making a free-response study loop feasible — but only with rubric-grounding and evaluation, the same safeguards any honest AI feature requires._
+
+      - **Link to source:** [https://arxiv.org/pdf/2309.09338](https://arxiv.org/pdf/2309.09338) ; [https://www.mdpi.com/2076-3417/15/10/5683](https://www.mdpi.com/2076-3417/15/10/5683) _(verify)_

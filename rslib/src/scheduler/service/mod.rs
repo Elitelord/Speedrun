@@ -389,6 +389,10 @@ impl crate::services::SchedulerService for Collection {
     ) -> Result<anki_proto::collection::OpChanges> {
         self.transact(Op::UpdateConfig, |col| {
             col.set_config_bool_inner(BoolKey::InterleaveTopics, input.enabled)?;
+            col.set_config_bool_inner(
+                BoolKey::InterleaveWeightByWeakness,
+                input.weight_by_weakness,
+            )?;
             col.set_interleave_topic_tags(&input.topic_tags)?;
             Ok(())
         })
@@ -399,6 +403,7 @@ impl crate::services::SchedulerService for Collection {
         Ok(scheduler::InterleaveConfig {
             enabled: self.get_config_bool(BoolKey::InterleaveTopics),
             topic_tags: self.get_interleave_topic_tags(),
+            weight_by_weakness: self.get_config_bool(BoolKey::InterleaveWeightByWeakness),
         })
     }
 

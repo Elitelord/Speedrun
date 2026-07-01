@@ -8,10 +8,38 @@ Python and confirms the shared Rust engine actually interleaves the study queue
 across MCAT topics.
 """
 
+import os
+
+import pytest
+
+from anki.collection import ImportAnkiPackageOptions, ImportAnkiPackageRequest
 from anki.consts import CARD_TYPE_REV, QUEUE_TYPE_REV
 from tests.shared import getEmptyCol
 
 TOPICS = ["mcat::biobiochem", "mcat::chemphys", "mcat::psychsoc"]
+
+# The shipped seed deck, built by docs/speedrun/seed-deck/build_apkg.py.
+SEED_APKG = os.path.abspath(
+    os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "..",
+        "docs",
+        "speedrun",
+        "seed-deck",
+        "MCAT.apkg",
+    )
+)
+
+
+def _topic_of_card(col, cid: int) -> int | None:
+    """Classify a card into a topic index the same way the scheduler does:
+    the first configured topic tag that the note carries (exact or subtag)."""
+    tags = col.get_card(cid).note().tags
+    for idx, topic in enumerate(TOPICS):
+        if any(tag == topic or tag.startswith(topic + "::") for tag in tags):
+            return idx
+    return None
 
 
 def _add_tagged_review_card(col, tag: str) -> int:
@@ -61,3 +89,61 @@ def test_interleave_config_roundtrip_and_ordering():
         counts[topic_of[qc.card.id]] += 1
     # all six cards still present, two per topic
     assert counts == [2, 2, 2]
+
+
+def test_interleave_orders_the_shipped_seed_deck():
+    """The behaviour on real seed data: importing the shipped MCAT.apkg and
+    enabling interleaving makes the study queue round-robin across the three
+    MCAT sections. Guards against the deck's tags/config drifting out of sync
+    with the scheduler."""
+    if not os.path.exists(SEED_APKG):
+        pytest.skip(f"seed deck not found at {SEED_APKG}")
+
+    col = getEmptyCol()
+    col.import_anki_package(
+        ImportAnkiPackageRequest(
+            package_path=SEED_APKG,
+            options=ImportAnkiPackageOptions(
+                with_scheduling=True, merge_notetypes=True
+            ),
+        )
+    )
+
+    # Study the imported "MCAT" deck.
+    deck_id = col.decks.id_for_name("MCAT")
+    assert deck_id is not None, "seed deck should import a top-level 'MCAT' deck"
+    col.decks.select(deck_id)
+
+    # Raise the daily new-card limit so cards from every topic are gathered:
+    # otherwise the day's limit fills up from the first section alone and there
+    # is nothing to interleave. (Mirrors the manual step a user takes after
+    # importing the deck.)
+    conf = col.decks.config_dict_for_deck_id(deck_id)
+    conf["new"]["perDay"] = 500
+    conf["rev"]["perDay"] = 1000
+    col.decks.update_config(conf)
+
+    # Every seed card carries exactly one of the three topic tags.
+    cids = col.find_cards("tag:mcat::*")
+    assert len(cids) >= 9, "seed deck should have several cards per topic"
+    assert all(_topic_of_card(col, cid) is not None for cid in cids)
+
+    def queue_topics() -> list[int | None]:
+        queued = col._backend.get_queued_cards(
+            fetch_limit=12, intraday_learning_only=False
+        )
+        return [_topic_of_card(col, qc.card.id) for qc in queued.cards]
+
+    # Uniform interleaving: the first passes round-robin 0,1,2,0,1,2,...
+    col.sched.set_interleave_config(enabled=True, topic_tags=TOPICS)
+    uniform = queue_topics()
+    assert len(uniform) >= 9
+    assert uniform[:9] == [0, 1, 2, 0, 1, 2, 0, 1, 2], uniform
+
+    # Weakness weighting is a safe no-op here: the seed cards are all new with no
+    # review history, so every topic is equally "weak" and the order is
+    # unchanged. (The weighting only diverges once real reviews exist.)
+    col.sched.set_interleave_config(
+        enabled=True, topic_tags=TOPICS, weight_by_weakness=True
+    )
+    assert queue_topics()[:9] == uniform[:9]
