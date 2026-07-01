@@ -27,7 +27,7 @@ class MemoryDashboardDialog(QDialog):
         disable_help_button(self)
         restoreGeom(self, self.TITLE, default_size=(600, 720))
 
-        self.web = AnkiWebView(kind=AnkiWebViewKind.DEFAULT)
+        self.web = AnkiWebView(kind=AnkiWebViewKind.MEMORY_DASHBOARD)
         self.web.load_sveltekit_page("memory-dashboard")
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
