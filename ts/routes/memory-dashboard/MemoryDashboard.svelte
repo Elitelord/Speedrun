@@ -7,7 +7,10 @@ FSRS predicted recall paired with an uncertainty range; when there aren't enough
 graded reviews (the give-up rule), it refuses to show a number rather than guess.
 -->
 <script lang="ts">
-    import type { MemoryScore, MemoryScoreResponse } from "@generated/anki/scheduler_pb";
+    import type {
+        MemoryScore,
+        MemoryScoreResponse,
+    } from "@generated/anki/scheduler_pb";
 
     import Col from "$lib/components/Col.svelte";
     import Container from "$lib/components/Container.svelte";
@@ -48,8 +51,8 @@ graded reviews (the give-up rule), it refuses to show a number rather than guess
         <div class="dashboard">
             <h1>Memory</h1>
             <p class="subtitle">
-                Predicted recall with an honest uncertainty range. No score is
-                shown until there are enough graded reviews to trust it.
+                Predicted recall with an honest uncertainty range. No score is shown
+                until there are enough graded reviews to trust it.
             </p>
 
             {#each rows as s (s.label)}

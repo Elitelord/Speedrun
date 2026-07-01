@@ -34,6 +34,21 @@ def main() -> None:
     try:
         deck_id = col.decks.id("MCAT")
         assert deck_id is not None
+
+        # Give the deck a high daily new-card limit so all topics are gathered
+        # (Anki's default ~20/day would otherwise gather only the first section,
+        # leaving interleaving nothing to mix). Exported with the deck below.
+        conf_id = col.decks.add_config_returning_id("MCAT Interleaved")
+        conf = col.decks.get_config(conf_id)
+        assert conf is not None
+        conf["new"]["perDay"] = 500
+        conf["rev"]["perDay"] = 1000
+        col.decks.update_config(conf)
+        deck = col.decks.get(deck_id)
+        assert deck is not None
+        col.decks.set_config_id_for_deck_dict(deck, conf_id)
+        col.decks.save(deck)
+
         basic = col.models.by_name("Basic")
         assert basic is not None
 
@@ -57,7 +72,8 @@ def main() -> None:
             out_path=out_apkg,
             options=ExportAnkiPackageOptions(
                 with_scheduling=False,
-                with_deck_configs=False,
+                # carry the high-limit deck config so interleaving is visible on import
+                with_deck_configs=True,
                 with_media=False,
                 legacy=False,
             ),
