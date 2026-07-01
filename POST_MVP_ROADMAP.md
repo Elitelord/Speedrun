@@ -201,6 +201,20 @@
    report the derived rates (precision/recall, FPR/FNR), not just raw counts.
    The most dangerous cell is a **false negative**: a wrong/bad question the
    classifier passed as good (a wrong fact is worse than no card). Set the
-   accept/reject cutoff to control that cell explicitly. Ties to **Brainlift
-   SPOV #3** (uncalibrated LLMs mislead) and the brief's eval-before-display +
-   beat-a-baseline requirements.
+   accept/reject cutoff to control that cell explicitly. Ties to the **AI-safety
+   guardrails** (Brainlift 4.5 — uncalibrated LLMs mislead) and the brief's
+   eval-before-display + beat-a-baseline requirements.
+
+3. **CI/CD auto-release on tag** _(build tooling)._ Push/tag → GitHub Actions
+   builds and attaches fresh artifacts, so a release can never ship a stale build
+   (the manual-MSI-missing-a-fix problem). Tractable first step: a
+   **desktop-MSI-on-tag** workflow in the engine repo (Windows runner,
+   `git submodule update --init qt/installer/windows-template`, `just` build,
+   `gh release upload`). The harder follow-up is the **Android APK**, which spans
+   three repos (`Speedrun-Android` → `Speedrun-Android-Backend` → this engine as a
+   submodule) + NDK/cargo-ndk/gradle, so it needs cross-repo orchestration (e.g.
+   a `repository_dispatch` from an engine tag, or CI living in the Android app
+   repo that checks out the backend + engine). Upstream `release.yml` /
+   `prepare-release.yml` build Anki's standard wheels (not the Briefcase MSI), but
+   are useful references. Deliberately deferred past the MVP: debugging release CI
+   is push-wait-repeat and competes with shipping; do one manual release first.
