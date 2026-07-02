@@ -1028,6 +1028,27 @@ class Collection(DeprecatedNamesMixin):
     def studied_today(self) -> str:
         return self._backend.studied_today()
 
+    def recent_deck_ids(self, limit: int = 5, days: int = 14) -> list[DeckId]:
+        """Speedrun: deck ids most recently reviewed, newest first.
+
+        revlog has no deck column, so we join through cards (revlog.cid =
+        cards.id) and take each deck's latest review within the window. Filtered
+        cards keep their home deck's id, so this reflects where studying
+        happened. Used by the deck-browser "recent decks" strip."""
+        cutoff_ms = (self.sched.day_cutoff - days * 86400) * 1000
+        rows = self.db.all(
+            """
+select c.did, max(r.id) as last
+from revlog r join cards c on c.id = r.cid
+where r.id > ?
+group by c.did
+order by last desc
+limit ?""",
+            cutoff_ms,
+            limit,
+        )
+        return [DeckId(did) for did, _last in rows]
+
     # Undo
     ##########################################################################
 

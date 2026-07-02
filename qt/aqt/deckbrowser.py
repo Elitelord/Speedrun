@@ -34,6 +34,10 @@ class DeckBrowserBottomBar:
         self.deck_browser = deck_browser
 
 
+# Speedrun: fallback MCAT topic tags when none are configured.
+_DEFAULT_MCAT_TAGS = ["mcat::biobiochem", "mcat::chemphys", "mcat::psychsoc"]
+
+
 @dataclass
 class RenderData:
     """Data from collection that is required to show the page."""
@@ -42,6 +46,11 @@ class RenderData:
     current_deck_id: DeckId
     studied_today: str
     sched_upgrade_required: bool
+    # Speedrun: the three honest scores + recently-studied decks for the landing.
+    memory: Any
+    performance: Any
+    readiness: Any
+    recent: list[tuple[int, str]]
 
 
 @dataclass
@@ -52,10 +61,12 @@ class DeckBrowserContent:
     Attributes:
         tree {str} -- HTML of the deck tree section
         stats {str} -- HTML of the stats section
+        scores {str} -- HTML of the Speedrun scores + recent-decks strip
     """
 
     tree: str
     stats: str
+    scores: str
 
 
 @dataclass
@@ -110,6 +121,8 @@ class DeckBrowser:
             arg = ""
         if cmd == "open":
             self.set_current_deck(DeckId(int(arg)))
+        elif cmd == "readiness":
+            self.mw.on_memory_dashboard()
         elif cmd == "opts":
             self._showOptions(arg)
         elif cmd == "shared":
@@ -146,6 +159,8 @@ class DeckBrowser:
 
     _body = """
 <center>
+%(scores)s
+<div id="speedrunDecksHeading">Your decks</div>
 <table cellspacing=0 cellpadding=3>
 %(tree)s
 </table>
@@ -159,11 +174,27 @@ class DeckBrowser:
         if not reuse:
 
             def get_data(col: Collection) -> RenderData:
+                tags = list(col.sched.get_interleave_config().topic_tags) or (
+                    _DEFAULT_MCAT_TAGS
+                )
+                recent: list[tuple[int, str]] = []
+                for did in col.recent_deck_ids(limit=6):
+                    name = col.decks.name_if_exists(did)
+                    if name:
+                        recent.append((int(did), name))
                 return RenderData(
                     tree=col.sched.deck_due_tree(),
                     current_deck_id=col.decks.get_current_id(),
                     studied_today=col.studied_today(),
                     sched_upgrade_required=not col.v3_scheduler(),
+                    memory=col.sched.compute_memory_score(search="", topic_tags=tags),
+                    performance=col.sched.compute_performance_score(
+                        search="", topic_tags=tags
+                    ),
+                    readiness=col.sched.compute_readiness_score(
+                        search="", topic_tags=tags
+                    ),
+                    recent=recent[:5],
                 )
 
             def success(output: RenderData) -> None:
@@ -183,6 +214,7 @@ class DeckBrowser:
         content = DeckBrowserContent(
             tree=self._renderDeckTree(data.tree),
             stats=self._renderStats(),
+            scores=self._render_scores_strip(),
         )
         gui_hooks.deck_browser_will_render_content(self, content)
         self.web.stdHtml(
@@ -207,6 +239,83 @@ class DeckBrowser:
     def _renderStats(self) -> str:
         return '<div id="studiedToday"><span>{}</span></div>'.format(
             self._render_data.studied_today
+        )
+
+    # Speedrun: three-scores + recent-decks strip on the landing page
+    ##########################################################################
+
+    _SCORES_CSS = """
+<style>
+#speedrunScores { max-width: 760px; margin: 0.5em auto 1.25em; }
+#speedrunScores .cards { display: flex; gap: 0.6em; justify-content: center;
+    flex-wrap: wrap; }
+#speedrunScores .scard { flex: 1 1 0; min-width: 150px; text-align: center;
+    border: 1px solid var(--border); border-radius: 8px; padding: 0.7em 0.5em;
+    background: var(--canvas-elevated, var(--canvas)); cursor: pointer; }
+#speedrunScores .scard .label { color: var(--fg-subtle); font-size: 0.8em;
+    text-transform: uppercase; letter-spacing: 0.03em; }
+#speedrunScores .scard .value { font-size: 1.7em; font-weight: bold;
+    font-variant-numeric: tabular-nums; line-height: 1.2; }
+#speedrunScores .scard .sub { color: var(--fg-subtle); font-size: 0.78em; }
+#speedrunScores .scard .value.muted { color: var(--fg-subtle); font-weight: normal; }
+#speedrunRecent { margin-top: 0.8em; font-size: 0.85em; color: var(--fg-subtle); }
+#speedrunRecent .chip { display: inline-block; margin: 0.15em 0.2em;
+    padding: 0.15em 0.7em; border: 1px solid var(--border); border-radius: 999px;
+    cursor: pointer; color: var(--fg-link); }
+#speedrunDecksHeading { max-width: 760px; margin: 0.5em auto 0.3em;
+    text-align: start; font-weight: bold; font-size: 1.1em; }
+</style>
+"""
+
+    @staticmethod
+    def _fraction_score(score: Any) -> str:
+        overall = getattr(score, "overall", None)
+        if overall and overall.shown and overall.cards_with_state > 0:
+            return f'<div class="value">{round(overall.estimate * 100)}%</div>'
+        return '<div class="value muted">—</div>'
+
+    def _render_scores_strip(self) -> str:
+        data = self._render_data
+        readiness = data.readiness
+        if readiness.shown:
+            covered = round(readiness.coverage * 4)
+            readiness_val = (
+                f'<div class="value">{round(readiness.scaled_estimate)}'
+                '<span style="font-size:0.5em;color:var(--fg-subtle)"> /528</span></div>'
+            )
+            readiness_sub = f"{covered}/4 sections"
+        else:
+            readiness_val = '<div class="value muted">—</div>'
+            readiness_sub = "study more to unlock"
+
+        cards = f"""
+<div class="scard" onclick="pycmd('readiness')" title="Open the MCAT Readiness dashboard">
+  <div class="label">Memory</div>{self._fraction_score(data.memory)}
+  <div class="sub">recall right now</div>
+</div>
+<div class="scard" onclick="pycmd('readiness')" title="Open the MCAT Readiness dashboard">
+  <div class="label">Performance</div>{self._fraction_score(data.performance)}
+  <div class="sub">exam-style accuracy</div>
+</div>
+<div class="scard" onclick="pycmd('readiness')" title="Open the MCAT Readiness dashboard">
+  <div class="label">Readiness</div>{readiness_val}
+  <div class="sub">{readiness_sub}</div>
+</div>
+"""
+
+        recent_html = ""
+        if data.recent:
+            chips = "".join(
+                f'<span class="chip" onclick="pycmd(\'open:{did}\')">{html.escape(name)}</span>'
+                for did, name in data.recent
+            )
+            recent_html = f'<div id="speedrunRecent">Recent: {chips}</div>'
+
+        return (
+            self._SCORES_CSS
+            + f'<div id="speedrunScores"><div class="cards">{cards}</div>'
+            + recent_html
+            + "</div>"
         )
 
     def _renderDeckTree(self, top: DeckTreeNode) -> str:
