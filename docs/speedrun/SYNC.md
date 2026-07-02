@@ -45,7 +45,7 @@ normal Anki data dir).
 
 ## Pointing the clients at it
 
-- **Desktop:** Preferences → Syncing → *Self-hosted sync server* =
+- **Desktop:** Preferences → Syncing → _Self-hosted sync server_ =
   `http://<LAN-ip>:8080/`; then Sync and log in as `demo`.
   (Stored via `qt/aqt/profiles.py::set_custom_sync_url`.)
 - **Android (AnkiDroid ≥ 2.16):** Settings → Sync → custom sync server =

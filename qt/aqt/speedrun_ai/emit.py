@@ -39,6 +39,8 @@ def write_tsvs(drafts: list[CardDraft], out_dir: Path) -> dict[str, int]:
         lines = [
             f"{_clean(d.front)}\t{_clean(d.back)}\t{_clean(d.source_name)}" for d in ds
         ]
-        (out_dir / f"{section}.tsv").write_text("\n".join(lines) + "\n", encoding="utf-8")
+        (out_dir / f"{section}.tsv").write_text(
+            "\n".join(lines) + "\n", encoding="utf-8"
+        )
         counts[section] = len(ds)
     return counts
