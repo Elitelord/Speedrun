@@ -26,7 +26,7 @@ from aqt.operations.deck import (
 from aqt.qt import *
 from aqt.sound import av_player
 from aqt.toolbar import BottomBar
-from aqt.utils import getOnlyText, openLink, shortcut, showInfo, tr
+from aqt.utils import getOnlyText, openLink, shortcut, showInfo, tooltip, tr
 
 
 class DeckBrowserBottomBar:
@@ -51,6 +51,7 @@ class RenderData:
     performance: Any
     readiness: Any
     recent: list[tuple[int, str]]
+    settings: dict[str, Any]
 
 
 @dataclass
@@ -83,6 +84,15 @@ class DeckBrowser:
         self.bottom = BottomBar(mw, mw.bottomWeb)
         self.scrollPos = QPoint(0, 0)
         self._refresh_needed = False
+        # Speedrun: which page the (single) main webview is showing.
+        # One of: home | library | readiness | settings.
+        self._view = "home"
+
+    def set_view(self, view: str) -> None:
+        """Switch the main-window view and re-render. Called by the nav rail."""
+        self._view = view
+        if self.mw.state == "deckBrowser":
+            self.refresh()
 
     def show(self) -> None:
         av_player.stop_and_clear_queue()
@@ -121,8 +131,16 @@ class DeckBrowser:
             arg = ""
         if cmd == "open":
             self.set_current_deck(DeckId(int(arg)))
+        elif cmd == "study":
+            self.set_current_deck(DeckId(int(arg)))
+        elif cmd == "view":
+            self.set_view(arg)
+        elif cmd == "savesettings":
+            self._save_settings(arg)
+        elif cmd == "advanced":
+            self._run_advanced(arg)
         elif cmd == "readiness":
-            self.mw.on_memory_dashboard()
+            self.set_view("readiness")
         elif cmd == "opts":
             self._showOptions(arg)
         elif cmd == "shared":
@@ -157,31 +175,114 @@ class DeckBrowser:
     # HTML generation
     ##########################################################################
 
-    _body = """
-<center>
-%(scores)s
-<div id="speedrunDecksHeading">Your decks</div>
-<table cellspacing=0 cellpadding=3>
-%(tree)s
-</table>
-
-<br>
-%(stats)s
-</center>
+    # Speedrun: a white/blue app shell applied to every main-window view. Uses
+    # explicit colours (not theme vars) per the requested light look.
+    _STYLE = """
+<style>
+:root { --sr-blue:#2563eb; --sr-blue-soft:#eff4ff; --sr-ink:#1e293b;
+    --sr-muted:#64748b; --sr-border:#e5e9f0; --sr-bg:#ffffff; }
+html, body { background:var(--sr-bg) !important; color:var(--sr-ink) !important; }
+#speedrunApp { max-width:1100px; margin:0 auto; padding:1.5em 2em 3em;
+    text-align:left; font-size:15px; }
+#speedrunApp h1 { font-size:1.6em; margin:0 0 0.15em; color:var(--sr-ink); }
+#speedrunApp .lead { color:var(--sr-muted); margin:0 0 1.4em; }
+#speedrunApp .section-head { display:flex; align-items:baseline;
+    justify-content:space-between; margin:1.6em 0 0.7em; }
+#speedrunApp .section-head h2 { font-size:1.15em; margin:0; }
+#speedrunApp .section-head a { color:var(--sr-blue); cursor:pointer;
+    font-size:0.9em; text-decoration:none; }
+#speedrunApp .scorewrap { display:grid;
+    grid-template-columns:repeat(3, 1fr); gap:1em; }
+#speedrunApp .score { border:1px solid var(--sr-border); border-radius:14px;
+    padding:1.2em 1.3em; background:#fff;
+    box-shadow:0 1px 3px rgba(15,23,42,0.05); cursor:pointer; }
+#speedrunApp .score:hover { border-color:var(--sr-blue); }
+#speedrunApp .score .label { color:var(--sr-muted); font-size:0.8em;
+    text-transform:uppercase; letter-spacing:0.04em; font-weight:600; }
+#speedrunApp .score .big { font-size:2.6em; font-weight:700; line-height:1.1;
+    font-variant-numeric:tabular-nums; color:var(--sr-ink); }
+#speedrunApp .score .big .unit { font-size:0.35em; color:var(--sr-muted);
+    font-weight:500; }
+#speedrunApp .score .big.muted { color:var(--sr-muted); font-weight:500;
+    font-size:2em; }
+#speedrunApp .score .sub { color:var(--sr-muted); font-size:0.85em;
+    margin-top:0.2em; }
+#speedrunApp .bar { position:relative; height:0.55em; border-radius:999px;
+    background:var(--sr-blue-soft); margin-top:0.8em; overflow:hidden; }
+#speedrunApp .bar .fill { position:absolute; left:0; top:0; bottom:0;
+    background:var(--sr-blue); border-radius:999px; }
+#speedrunApp .deckgrid { display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:1em; }
+#speedrunApp .deck-card { border:1px solid var(--sr-border); border-radius:14px;
+    padding:1.1em 1.2em; background:#fff; cursor:pointer;
+    box-shadow:0 1px 3px rgba(15,23,42,0.05); transition:border-color .12s; }
+#speedrunApp .deck-card:hover { border-color:var(--sr-blue); }
+#speedrunApp .deck-card .name { font-weight:600; font-size:1.05em;
+    margin-bottom:0.6em; color:var(--sr-ink); }
+#speedrunApp .deck-card .counts { display:flex; gap:1.1em; font-size:0.9em; }
+#speedrunApp .deck-card .counts .n { font-weight:700;
+    font-variant-numeric:tabular-nums; }
+#speedrunApp .deck-card .counts .new .n { color:var(--sr-blue); }
+#speedrunApp .deck-card .counts .learn .n { color:#dc2626; }
+#speedrunApp .deck-card .counts .due .n { color:#16a34a; }
+#speedrunApp .deck-card .counts .lbl { color:var(--sr-muted); }
+#speedrunApp .deck-card.add { display:flex; align-items:center;
+    justify-content:center; color:var(--sr-blue); font-weight:600;
+    border-style:dashed; }
+#speedrunApp .foot { margin-top:1.4em; color:var(--sr-muted); font-size:0.85em; }
+#speedrunApp .chips .chip { display:inline-block; margin:0.15em 0.3em 0.15em 0;
+    padding:0.2em 0.8em; border:1px solid var(--sr-border); border-radius:999px;
+    cursor:pointer; color:var(--sr-blue); background:#fff; }
+#speedrunApp .panel { border:1px solid var(--sr-border); border-radius:14px;
+    padding:1.3em 1.5em; background:#fff; margin-bottom:1.2em; }
+#speedrunApp .sec-row { display:flex; justify-content:space-between;
+    align-items:center; padding:0.55em 0; border-bottom:1px solid var(--sr-border); }
+#speedrunApp .sec-row:last-child { border-bottom:none; }
+#speedrunApp .sec-row .k { font-weight:600; }
+#speedrunApp .badge { padding:0.12em 0.7em; border-radius:999px;
+    font-size:0.85em; background:#dc2626; color:#fff; }
+#speedrunApp .badge.ok { background:#16a34a; }
+#speedrunApp label.opt { display:flex; gap:0.7em; align-items:flex-start;
+    padding:0.6em 0; cursor:pointer; }
+#speedrunApp label.opt input { margin-top:0.25em; }
+#speedrunApp label.opt .desc { color:var(--sr-muted); font-size:0.86em; }
+#speedrunApp textarea, #speedrunApp input[type=text] { width:100%;
+    border:1px solid var(--sr-border); border-radius:8px; padding:0.5em 0.7em;
+    font-family:inherit; color:var(--sr-ink); background:#fff; box-sizing:border-box; }
+#speedrunApp .btn { display:inline-block; padding:0.55em 1.4em; border:none;
+    border-radius:8px; background:var(--sr-blue); color:#fff; cursor:pointer;
+    font-size:1em; }
+#speedrunApp .btn.ghost { background:#fff; color:var(--sr-blue);
+    border:1px solid var(--sr-border); }
+#speedrunApp .adv-links { display:flex; flex-wrap:wrap; gap:0.6em; }
+#speedrunApp .saved { color:#16a34a; margin-left:1em; }
+</style>
 """
 
     def _renderPage(self, reuse: bool = False) -> None:
         if not reuse:
 
             def get_data(col: Collection) -> RenderData:
-                tags = list(col.sched.get_interleave_config().topic_tags) or (
-                    _DEFAULT_MCAT_TAGS
-                )
+                from aqt.speedrun_ai.config import get_config
+
+                interleave = col.sched.get_interleave_config()
+                tags = list(interleave.topic_tags) or _DEFAULT_MCAT_TAGS
                 recent: list[tuple[int, str]] = []
                 for did in col.recent_deck_ids(limit=6):
                     name = col.decks.name_if_exists(did)
                     if name:
                         recent.append((int(did), name))
+                ai = get_config()
+                settings = {
+                    "interleave_enabled": interleave.enabled,
+                    "weight_by_weakness": interleave.weight_by_weakness,
+                    "topic_tags": tags,
+                    "production_mode": self.mw.pm.production_mode_enabled(),
+                    "type_in_default": self.mw.pm.type_in_default_enabled(),
+                    "ai_key": ai.has_key,
+                    "ai_model": ai.chat_model,
+                    "ai_embed": ai.embed_model,
+                }
                 return RenderData(
                     tree=col.sched.deck_due_tree(),
                     current_deck_id=col.decks.get_current_id(),
@@ -195,6 +296,7 @@ class DeckBrowser:
                         search="", topic_tags=tags
                     ),
                     recent=recent[:5],
+                    settings=settings,
                 )
 
             def success(output: RenderData) -> None:
@@ -210,16 +312,14 @@ class DeckBrowser:
             self.web.evalWithCallback("window.pageYOffset", self.__renderPage)
 
     def __renderPage(self, offset: int | None) -> None:
-        data = self._render_data
-        content = DeckBrowserContent(
-            tree=self._renderDeckTree(data.tree),
-            stats=self._renderStats(),
-            scores=self._render_scores_strip(),
-        )
-        gui_hooks.deck_browser_will_render_content(self, content)
+        renderers = {
+            "readiness": self._render_readiness,
+            "settings": self._render_settings,
+            "library": self._render_library,
+        }
+        body = renderers.get(self._view, self._render_home)()
         self.web.stdHtml(
-            self._v1_upgrade_message(data.sched_upgrade_required)
-            + self._body % content.__dict__,
+            self._STYLE + body,
             css=["css/deckbrowser.css"],
             js=[
                 "js/vendor/jquery.min.js",
@@ -241,82 +341,263 @@ class DeckBrowser:
             self._render_data.studied_today
         )
 
-    # Speedrun: three-scores + recent-decks strip on the landing page
+    # Speedrun: in-window views (home / library / readiness / settings)
     ##########################################################################
 
-    _SCORES_CSS = """
-<style>
-#speedrunScores { max-width: 760px; margin: 0.5em auto 1.25em; }
-#speedrunScores .cards { display: flex; gap: 0.6em; justify-content: center;
-    flex-wrap: wrap; }
-#speedrunScores .scard { flex: 1 1 0; min-width: 150px; text-align: center;
-    border: 1px solid var(--border); border-radius: 8px; padding: 0.7em 0.5em;
-    background: var(--canvas-elevated, var(--canvas)); cursor: pointer; }
-#speedrunScores .scard .label { color: var(--fg-subtle); font-size: 0.8em;
-    text-transform: uppercase; letter-spacing: 0.03em; }
-#speedrunScores .scard .value { font-size: 1.7em; font-weight: bold;
-    font-variant-numeric: tabular-nums; line-height: 1.2; }
-#speedrunScores .scard .sub { color: var(--fg-subtle); font-size: 0.78em; }
-#speedrunScores .scard .value.muted { color: var(--fg-subtle); font-weight: normal; }
-#speedrunRecent { margin-top: 0.8em; font-size: 0.85em; color: var(--fg-subtle); }
-#speedrunRecent .chip { display: inline-block; margin: 0.15em 0.2em;
-    padding: 0.15em 0.7em; border: 1px solid var(--border); border-radius: 999px;
-    cursor: pointer; color: var(--fg-link); }
-#speedrunDecksHeading { max-width: 760px; margin: 0.5em auto 0.3em;
-    text-align: start; font-weight: bold; font-size: 1.1em; }
-</style>
-"""
-
     @staticmethod
-    def _fraction_score(score: Any) -> str:
+    def _pct(fraction: float) -> int:
+        return round(max(0.0, min(1.0, fraction)) * 100)
+
+    def _bar(self, pct: int) -> str:
+        return f'<div class="bar"><div class="fill" style="width:{pct}%"></div></div>'
+
+    def _score_card(self, label: str, score: Any, sub: str) -> str:
         overall = getattr(score, "overall", None)
         if overall and overall.shown and overall.cards_with_state > 0:
-            return f'<div class="value">{round(overall.estimate * 100)}%</div>'
-        return '<div class="value muted">—</div>'
-
-    def _render_scores_strip(self) -> str:
-        data = self._render_data
-        readiness = data.readiness
-        if readiness.shown:
-            covered = round(readiness.coverage * 4)
-            readiness_val = (
-                f'<div class="value">{round(readiness.scaled_estimate)}'
-                '<span style="font-size:0.5em;color:var(--fg-subtle)"> /528</span></div>'
-            )
-            readiness_sub = f"{covered}/4 sections"
+            pct = self._pct(overall.estimate)
+            big = f'<div class="big">{pct}<span class="unit">%</span></div>'
+            bar = self._bar(pct)
         else:
-            readiness_val = '<div class="value muted">—</div>'
-            readiness_sub = "study more to unlock"
-
-        cards = f"""
-<div class="scard" onclick="pycmd('readiness')" title="Open the MCAT Readiness dashboard">
-  <div class="label">Memory</div>{self._fraction_score(data.memory)}
-  <div class="sub">recall right now</div>
-</div>
-<div class="scard" onclick="pycmd('readiness')" title="Open the MCAT Readiness dashboard">
-  <div class="label">Performance</div>{self._fraction_score(data.performance)}
-  <div class="sub">exam-style accuracy</div>
-</div>
-<div class="scard" onclick="pycmd('readiness')" title="Open the MCAT Readiness dashboard">
-  <div class="label">Readiness</div>{readiness_val}
-  <div class="sub">{readiness_sub}</div>
-</div>
-"""
-
-        recent_html = ""
-        if data.recent:
-            chips = "".join(
-                f'<span class="chip" onclick="pycmd(\'open:{did}\')">{html.escape(name)}</span>'
-                for did, name in data.recent
-            )
-            recent_html = f'<div id="speedrunRecent">Recent: {chips}</div>'
-
+            big = '<div class="big muted">—</div>'
+            bar = ""
         return (
-            self._SCORES_CSS
-            + f'<div id="speedrunScores"><div class="cards">{cards}</div>'
-            + recent_html
+            '<div class="score" onclick="pycmd(\'view:readiness\')">'
+            f'<div class="label">{label}</div>{big}'
+            f'<div class="sub">{sub}</div>{bar}</div>'
+        )
+
+    def _readiness_card(self) -> str:
+        r = self._render_data.readiness
+        if r.shown:
+            covered = round(r.coverage * 4)
+            big = (
+                f'<div class="big">{round(r.scaled_estimate)}'
+                '<span class="unit">/528</span></div>'
+            )
+            sub = f"{covered}/4 sections studied"
+            bar = self._bar(self._pct((r.scaled_estimate - 472) / 56))
+        else:
+            big = '<div class="big muted">—</div>'
+            sub = "study more to unlock"
+            bar = ""
+        return (
+            '<div class="score" onclick="pycmd(\'view:readiness\')">'
+            f'<div class="label">Readiness</div>{big}'
+            f'<div class="sub">{sub}</div>{bar}</div>'
+        )
+
+    def _scores_row(self) -> str:
+        d = self._render_data
+        return (
+            '<div class="scorewrap">'
+            + self._score_card("Memory", d.memory, "recall right now")
+            + self._score_card("Performance", d.performance, "exam-style accuracy")
+            + self._readiness_card()
             + "</div>"
         )
+
+    def _deck_counts(self, node: DeckTreeNode) -> tuple[int, int, int]:
+        new, learn, rev = node.new_count, node.learn_count, node.review_count
+        for child in node.children:
+            c_new, c_learn, c_rev = self._deck_counts(child)
+            new, learn, rev = new + c_new, learn + c_learn, rev + c_rev
+        return new, learn, rev
+
+    def _deck_card(self, node: DeckTreeNode) -> str:
+        new, learn, rev = self._deck_counts(node)
+        return (
+            f'<div class="deck-card" onclick="pycmd(\'study:{node.deck_id}\')">'
+            f'<div class="name">{html.escape(node.name)}</div>'
+            '<div class="counts">'
+            f'<span class="new"><span class="n">{new}</span> <span class="lbl">new</span></span>'
+            f'<span class="learn"><span class="n">{learn}</span> <span class="lbl">learn</span></span>'
+            f'<span class="due"><span class="n">{rev}</span> <span class="lbl">due</span></span>'
+            "</div></div>"
+        )
+
+    def _deck_cards(self, nodes: list[DeckTreeNode]) -> str:
+        return "".join(self._deck_card(n) for n in nodes)
+
+    def _render_home(self) -> str:
+        data = self._render_data
+        nodes = list(data.tree.children)
+        shown = nodes[:6]
+        more = (
+            "<a onclick=\"pycmd('view:library')\">See all decks →</a>"
+            if len(nodes) > 6
+            else ""
+        )
+        add_card = (
+            '<div class="deck-card add" onclick="pycmd(\'create\')">+ New deck</div>'
+        )
+        content = DeckBrowserContent(
+            tree=self._deck_cards(shown),
+            stats=self._renderStats(),
+            scores=self._scores_row(),
+        )
+        gui_hooks.deck_browser_will_render_content(self, content)
+        recent = ""
+        if data.recent:
+            chips = "".join(
+                f'<span class="chip" onclick="pycmd(\'study:{did}\')">{html.escape(name)}</span>'
+                for did, name in data.recent
+            )
+            recent = f'<div class="foot chips">Recent: {chips}</div>'
+        return (
+            self._v1_upgrade_message(data.sched_upgrade_required)
+            + '<div id="speedrunApp">'
+            "<h1>MCAT readiness</h1>"
+            '<p class="lead">Your honest scores and where to study next.</p>'
+            + content.scores
+            + '<div class="section-head"><h2>Your decks</h2>'
+            + more
+            + "</div>"
+            + '<div class="deckgrid">'
+            + content.tree
+            + add_card
+            + "</div>"
+            + recent
+            + "</div>"
+        )
+
+    def _render_library(self) -> str:
+        nodes = list(self._render_data.tree.children)
+        add_card = (
+            '<div class="deck-card add" onclick="pycmd(\'create\')">+ New deck</div>'
+        )
+        return (
+            '<div id="speedrunApp">'
+            '<div class="section-head"><h1>Decks</h1>'
+            "<a onclick=\"pycmd('view:home')\">← Home</a></div>"
+            '<div class="deckgrid">' + self._deck_cards(nodes) + add_card + "</div>"
+            "</div>"
+        )
+
+    def _render_readiness(self) -> str:
+        r = self._render_data.readiness
+        rows = ""
+        for topic in r.topics:
+            mastery = topic.mastery
+            label = (mastery.label.split("::")[-1] if mastery else "").title()
+            if mastery and mastery.shown and mastery.cards_with_state > 0:
+                val = (
+                    f"{round(topic.scaled_estimate)} "
+                    f'<span style="color:var(--sr-muted)">'
+                    f"({round(topic.scaled_low)}–{round(topic.scaled_high)})</span>"
+                )
+            else:
+                val = '<span style="color:var(--sr-muted)">not enough data</span>'
+            rows += f'<div class="sec-row"><span class="k">{label}</span><span>{val}</span></div>'
+        rows += (
+            '<div class="sec-row"><span class="k">CARS</span>'
+            '<span style="color:var(--sr-muted)">coming with the CARS module</span></div>'
+        )
+        return (
+            '<div id="speedrunApp">'
+            '<div class="section-head"><h1>Readiness</h1>'
+            "<a onclick=\"pycmd('view:home')\">← Home</a></div>"
+            '<p class="lead">Projected MCAT total (472–528) as the sum of the four '
+            "sections, plus your memory and exam-style performance.</p>"
+            + self._scores_row()
+            + '<div class="section-head"><h2>By section</h2></div>'
+            + f'<div class="panel">{rows}</div>'
+            + "</div>"
+        )
+
+    def _render_settings(self) -> str:
+        s = self._render_data.settings
+        tags = "\n".join(s["topic_tags"])
+        key_badge = (
+            '<span class="badge ok">detected</span>'
+            if s["ai_key"]
+            else '<span class="badge">not detected</span>'
+        )
+        checked = lambda b: "checked" if b else ""  # noqa: E731
+        int_dis = "" if s["interleave_enabled"] else "disabled"
+        prod_dis = "" if s["production_mode"] else "disabled"
+        return (
+            '<div id="speedrunApp">'
+            '<div class="section-head"><h1>Settings</h1>'
+            "<a onclick=\"pycmd('view:home')\">← Home</a></div>"
+            # Study
+            '<div class="panel"><h2>Study</h2>'
+            f'<label class="opt"><input type="checkbox" id="sr_int" {checked(s["interleave_enabled"])} '
+            "onchange=\"document.getElementById('sr_weak').disabled=!this.checked\">"
+            '<span><b>Interleave topics</b><div class="desc">Round-robin cards across your '
+            "MCAT topics instead of one at a time.</div></span></label>"
+            f'<label class="opt"><input type="checkbox" id="sr_weak" {checked(s["weight_by_weakness"])} {int_dis}>'
+            '<span><b>Weight by weakness</b><div class="desc">Show weaker topics more often.</div></span></label>'
+            '<label class="opt" style="display:block"><b>Topic tags</b>'
+            '<div class="desc">One tag per line.</div>'
+            f'<textarea id="sr_tags" rows="3">{html.escape(tags)}</textarea></label></div>'
+            # Review
+            '<div class="panel"><h2>Review</h2>'
+            f'<label class="opt"><input type="checkbox" id="sr_prod" {checked(s["production_mode"])} '
+            "onchange=\"document.getElementById('sr_typein').disabled=!this.checked\">"
+            '<span><b>Free-text grading</b><div class="desc">Type your answer and have it graded '
+            "instead of flipping a flashcard.</div></span></label>"
+            f'<label class="opt"><input type="checkbox" id="sr_typein" {checked(s["type_in_default"])} {prod_dis}>'
+            '<span><b>Apply to every card</b><div class="desc">Works on any card with a back field '
+            "— no Change Notetype needed.</div></span></label></div>"
+            # AI
+            '<div class="panel"><h2>AI</h2>'
+            f'<div class="sec-row"><span class="k">API key</span>{key_badge}</div>'
+            f'<div class="sec-row"><span class="k">Chat model</span><span>{html.escape(s["ai_model"])}</span></div>'
+            f'<div class="sec-row"><span class="k">Embedding model</span><span>{html.escape(s["ai_embed"])}</span></div>'
+            "</div>"
+            # Advanced
+            '<div class="panel"><h2>Advanced</h2>'
+            '<div class="adv-links">'
+            '<button class="btn ghost" onclick="pycmd(\'advanced:preferences\')">Preferences</button>'
+            '<button class="btn ghost" onclick="pycmd(\'advanced:notetypes\')">Note Types</button>'
+            '<button class="btn ghost" onclick="pycmd(\'advanced:import\')">Import</button>'
+            '<button class="btn ghost" onclick="pycmd(\'advanced:export\')">Export</button>'
+            '<button class="btn ghost" onclick="pycmd(\'advanced:checkdb\')">Check Database</button>'
+            '<button class="btn ghost" onclick="pycmd(\'advanced:emptycards\')">Empty Cards</button>'
+            "</div></div>"
+            # Save
+            '<button class="btn" onclick="srSave()">Save</button>'
+            "<script>function srSave(){pycmd('savesettings:'+JSON.stringify({"
+            "interleave_enabled:document.getElementById('sr_int').checked,"
+            "weight_by_weakness:document.getElementById('sr_weak').checked,"
+            "production_mode:document.getElementById('sr_prod').checked,"
+            "type_in_default:document.getElementById('sr_typein').checked,"
+            "topic_tags:document.getElementById('sr_tags').value}));}</script>"
+            "</div>"
+        )
+
+    def _save_settings(self, raw: str) -> None:
+        import json
+
+        try:
+            data = json.loads(raw)
+        except ValueError:
+            return
+        self.mw.pm.set_production_mode_enabled(bool(data.get("production_mode")))
+        self.mw.pm.set_type_in_default_enabled(bool(data.get("type_in_default")))
+        tags = [
+            t.strip() for t in str(data.get("topic_tags", "")).split("\n") if t.strip()
+        ]
+        self.mw.col.sched.set_interleave_config(
+            enabled=bool(data.get("interleave_enabled")),
+            topic_tags=tags or _DEFAULT_MCAT_TAGS,
+            weight_by_weakness=bool(data.get("weight_by_weakness")),
+        )
+        tooltip("Settings saved", parent=self.mw)
+        self.mw.reset()
+
+    def _run_advanced(self, action: str) -> None:
+        handlers: dict[str, Any] = {
+            "preferences": self.mw.onPrefs,
+            "notetypes": self.mw.onNoteTypes,
+            "import": self.mw.onImport,
+            "export": self.mw.onExport,
+            "checkdb": self.mw.onCheckDB,
+            "emptycards": self.mw.onEmptyCards,
+        }
+        handler = handlers.get(action)
+        if handler:
+            handler()
 
     def _renderDeckTree(self, top: DeckTreeNode) -> str:
         buf = """

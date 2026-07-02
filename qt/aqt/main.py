@@ -763,9 +763,13 @@ class AnkiQt(QMainWindow):
             cleanup(state)
         self.clearStateShortcuts()
         self.state = state
-        # Speedrun: the study flow (decks/overview/review) lives under "Decks".
-        if state in ("deckBrowser", "overview", "review"):
-            self._highlight_nav("decks")
+        # Speedrun: keep the nav rail in sync. In-window deck-browser views
+        # highlight their own button (via show_deck_view); the study flow
+        # (overview/review) falls under Home.
+        if state == "deckBrowser":
+            self._highlight_nav(getattr(self.deckBrowser, "_view", "home"))
+        elif state in ("overview", "review"):
+            self._highlight_nav("home")
         gui_hooks.state_will_change(state, oldState)
         getattr(self, f"_{state}State", lambda *_: None)(oldState, *args)
         if state != "resetRequired":
@@ -981,6 +985,14 @@ title="{}" {}>{}</button>""".format(
         self._restore_nav_splitter_state()
         qconnect(self.central_splitter.splitterMoved, self._save_nav_splitter_state)
 
+        # Speedrun: the left rail replaces the top toolbar's navigation, so keep
+        # the top toolbar hidden and neutralise its many re-show call sites. The
+        # Qt menu bar is likewise hidden — its actions live in Settings ->
+        # Advanced (shortcuts still work).
+        tweb.hide()
+        tweb.show = lambda *a, **k: None  # type: ignore[method-assign]
+        self.hide_menubar()
+
         # force webengine processes to load before cwd is changed
         if is_win:
             for webview in self.web, self.bottomWeb:
@@ -991,39 +1003,73 @@ title="{}" {}>{}</button>""".format(
     # Speedrun: left navigation rail
     ##########################################################################
 
+    _NAV_STYLE = """
+#speedrunNav { background: #ffffff; border-right: 1px solid #e5e9f0; }
+#speedrunNav QLabel#navTitle { color: #2563eb; font-size: 18px; font-weight: 700;
+    padding: 6px 14px 14px; }
+#speedrunNav QPushButton { text-align: left; padding: 11px 14px; border: none;
+    border-radius: 8px; color: #334155; font-size: 14px; background: transparent; }
+#speedrunNav QPushButton:hover { background: #f1f5f9; }
+#speedrunNav QPushButton:checked { background: #eff4ff; color: #2563eb;
+    font-weight: 600; }
+"""
+
     def _build_nav_sidebar(self) -> QWidget:
-        """A slim vertical button rail: Decks / Readiness / Stats / Settings."""
+        """The left navigation rail — the app's primary navigation, replacing
+        the old top toolbar. White background, blue accent."""
         sidebar = QWidget()
         sidebar.setObjectName("speedrunNav")
-        sidebar.setMinimumWidth(120)
-        sidebar.setMaximumWidth(240)
+        sidebar.setStyleSheet(self._NAV_STYLE)
+        sidebar.setMinimumWidth(160)
+        sidebar.setMaximumWidth(260)
         layout = QVBoxLayout(sidebar)
-        layout.setContentsMargins(6, 10, 6, 10)
-        layout.setSpacing(4)
+        layout.setContentsMargins(8, 14, 8, 14)
+        layout.setSpacing(6)
+
+        title = QLabel("MCAT")
+        title.setObjectName("navTitle")
+        layout.addWidget(title)
 
         self._nav_buttons: dict[str, QPushButton] = {}
-        entries = [
-            ("decks", "Decks", lambda: self.moveToState("deckBrowser")),
-            ("readiness", "Readiness", self.on_memory_dashboard),
-            ("stats", "Stats", self.onStats),
-            ("settings", "Settings", self.on_speedrun_settings),
-        ]
-        for key, label, handler in entries:
+
+        def add_button(
+            key: str, label: str, handler: Callable[[], None], page: bool
+        ) -> None:
             btn = QPushButton(label)
-            btn.setCheckable(True)
-            btn.setAutoExclusive(True)
+            # Page buttons act as an exclusive tab group; action buttons (Add,
+            # Browse, Stats, Sync) just fire and don't stay highlighted.
+            btn.setCheckable(page)
+            btn.setAutoExclusive(page)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            btn.setMinimumHeight(42)
             btn.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-            qconnect(btn.clicked, lambda _=False, k=key, h=handler: self._on_nav(k, h))
+            qconnect(btn.clicked, lambda _=False, h=handler: h())
             layout.addWidget(btn)
             self._nav_buttons[key] = btn
+
+        add_button("home", "Home", lambda: self.show_deck_view("home"), True)
+        add_button("add", "Add", self.onAddCard, False)
+        add_button("browse", "Browse", self.onBrowse, False)
+        add_button(
+            "readiness", "Readiness", lambda: self.show_deck_view("readiness"), True
+        )
+        add_button("stats", "Stats", self.onStats, False)
+        add_button(
+            "settings", "Settings", lambda: self.show_deck_view("settings"), True
+        )
         layout.addStretch(1)
-        self._nav_buttons["decks"].setChecked(True)
+        add_button("sync", "Sync", self.on_sync_button_clicked, False)
+
+        self._nav_buttons["home"].setChecked(True)
         return sidebar
 
-    def _on_nav(self, key: str, handler: Callable[[], None]) -> None:
-        self._nav_buttons[key].setChecked(True)
-        handler()
+    def show_deck_view(self, view: str) -> None:
+        """Switch the main window to an in-window deck-browser view (home /
+        library / readiness / settings) — no popup dialogs."""
+        self.deckBrowser.set_view(view)
+        if self.state != "deckBrowser":
+            self.moveToState("deckBrowser")
+        self._highlight_nav(view if view in self._nav_buttons else "home")
 
     def _highlight_nav(self, key: str) -> None:
         """Reflect the active screen in the rail (called from moveToState)."""
@@ -1048,9 +1094,7 @@ title="{}" {}>{}</button>""".format(
             self.central_splitter.setSizes([160, 900])
 
     def on_speedrun_settings(self) -> None:
-        from aqt.speedrun_settings import SpeedrunSettingsDialog
-
-        SpeedrunSettingsDialog(self)
+        self.show_deck_view("settings")
 
     def closeAllWindows(self, onsuccess: Callable) -> None:
         aqt.dialogs.closeAll(onsuccess)
@@ -1382,9 +1426,7 @@ title="{}" {}>{}</button>""".format(
         self.moveToState("overview")
 
     def on_memory_dashboard(self) -> None:
-        from aqt.memory_dashboard import MemoryDashboardDialog
-
-        MemoryDashboardDialog(self)
+        self.show_deck_view("readiness")
 
     def _sync_interleave_action(self) -> None:
         # Reflect the current collection config in the menu checkmarks.
