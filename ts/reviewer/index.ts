@@ -179,6 +179,11 @@ export function _showQuestion(q: string, a: string, bodyclass: string): void {
                 if (typeans) {
                     typeans.focus();
                 }
+                // Speedrun: clear any stale free-text grading feedback.
+                const fb = document.getElementById("ai-feedback");
+                if (fb) {
+                    fb.innerHTML = "";
+                }
                 // preload images
                 allImagesLoaded().then(() => preloadAnswerImages(a));
             },
@@ -226,6 +231,38 @@ export function _typeAnsPress(): void {
     const key = (window.event as KeyboardEvent).key;
     if (key === "Enter") {
         bridgeCommand("ans");
+    }
+}
+
+// Speedrun free-text production loop: a feedback region beneath #qa for the
+// LLM's verdict/hint. Rendered separately from _updateQA so it survives across
+// grade attempts without wiping the question or the typed text.
+function _aiFeedbackEl(): HTMLElement {
+    let el = document.getElementById("ai-feedback");
+    if (!el) {
+        el = document.createElement("div");
+        el.id = "ai-feedback";
+        document.getElementById("qa")?.insertAdjacentElement("afterend", el);
+    }
+    return el;
+}
+
+export function _showProductionFeedback(html: string): void {
+    _aiFeedbackEl().innerHTML = html;
+    const t = document.getElementById("typeans") as HTMLInputElement | null;
+    if (t) {
+        t.disabled = false;
+        t.focus();
+    }
+}
+
+export function _setProductionGrading(on: boolean): void {
+    const t = document.getElementById("typeans") as HTMLInputElement | null;
+    if (t) {
+        t.disabled = on;
+    }
+    if (on) {
+        _aiFeedbackEl().innerHTML = "<span class='ai-grading'>Grading…</span>";
     }
 }
 

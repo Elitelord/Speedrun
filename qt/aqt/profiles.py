@@ -559,6 +559,14 @@ create table if not exists profiles
     def set_spacebar_rates_card(self, on: bool) -> None:
         self.meta["spacebar_rates_card"] = on
 
+    # Speedrun: free-text production review loop (type answer -> LLM grade ->
+    # hint -> reveal). Desktop-only, per-profile; off by default.
+    def production_mode_enabled(self) -> bool:
+        return self.meta.get("speedrun_production_mode", False)
+
+    def set_production_mode_enabled(self, on: bool) -> None:
+        self.meta["speedrun_production_mode"] = on
+
     def get_answer_key(self, ease: int) -> str | None:
         return self.meta.setdefault("answer_keys", self.default_answer_keys).get(ease)
 

@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import html
 import json
 import random
 import re
@@ -15,6 +16,7 @@ from typing import Any, Literal, Match, Union, cast
 import aqt
 import aqt.browser
 import aqt.operations
+import aqt.speedrun_ai
 from anki.cards import Card, CardId
 from anki.collection import Config, OpChanges, OpChangesWithCount
 from anki.lang import with_collapsed_whitespace
@@ -33,6 +35,7 @@ from anki.utils import is_mac
 from aqt import AnkiQt, gui_hooks
 from aqt.browser.card_info import PreviousReviewerCardInfo, ReviewerCardInfo
 from aqt.deckoptions import confirm_deck_then_display_options
+from aqt.operations import QueryOp
 from aqt.operations.card import set_card_flag
 from aqt.operations.note import remove_notes
 from aqt.operations.scheduling import (
@@ -373,6 +376,10 @@ class Reviewer:
         self._reps += 1
         self.state = "question"
         self.typedAnswer: str | None = None
+        # Speedrun free-text production loop: per-card state, reset every card
+        # (undo re-renders the question, so transient hint state is discarded).
+        self._prod_attempt = 0
+        self._prod_grading = False
         c = self.card
         # grab the question and play audio
         q = c.question()
@@ -675,6 +682,9 @@ class Reviewer:
     def _linkHandler(self, url: str) -> None:
         if url == "ans":
             self._getTypedAnswer()
+        elif url == "reveal":
+            # Speedrun: user gave up in the free-text loop -> reveal + lapse.
+            self._reveal_and_autograde(1, "")
         elif url.startswith("ease"):
             val: Literal[1, 2, 3, 4] = int(url[4:])  # type: ignore
             self._answerCard(val)
@@ -804,7 +814,132 @@ class Reviewer:
 
     def _onTypedAnswer(self, val: None) -> None:
         self.typedAnswer = val or ""
+        if self._production_mode_active():
+            self._grade_attempt(self.typedAnswer or "")
+        else:
+            # Classic (and AI-off) path: reveal for the native type-answer diff +
+            # self-grade. The writing component is preserved either way.
+            self._showAnswer()
+
+    # Speedrun: free-text production review loop (SPOV #3)
+    ##########################################################################
+    #
+    # Instead of reveal-then-self-grade, the typed answer is graded by an LLM; a
+    # wrong attempt gets a scaffolded hint -> re-attempt -> reveal, and the grade
+    # maps onto an FSRS ease so reappearance is keyed to *how* it was answered.
+    # When AI is off/unavailable it falls through to the native type-answer flip,
+    # which still keeps the writing. Everything terminates in the unchanged
+    # _showAnswer() + _answerCard() path, so FSRS/undo/revlog are untouched.
+
+    MAX_PROD_ATTEMPTS = 2
+
+    def _production_mode_active(self) -> bool:
+        # Eligible only for cards with a {{type:}} field (self.typeCorrect is the
+        # expected answer), when the profile flag is on and AI is usable.
+        return bool(
+            self.typeCorrect
+            and self.mw.pm.production_mode_enabled()
+            and aqt.speedrun_ai.ai_enabled()
+        )
+
+    @staticmethod
+    def _decide_ease(verdict: str, grader_ease: int | None, attempt: int) -> int:
+        """Map an LLM grade + attempt count onto an FSRS ease (1-4). Honour an
+        explicit grader ease if given, else: correct first try -> Good; correct
+        after a hint -> Hard; wrong/revealed -> Again (a revealed answer is a
+        failed recall)."""
+        if grader_ease in (1, 2, 3, 4):
+            return grader_ease
+        if verdict == "correct":
+            return 3 if attempt <= 1 else 2
+        return 1
+
+    def _grade_attempt(self, typed: str) -> None:
+        if self._prod_grading or self.card is None:
+            return
+        self._prod_grading = True
+        self._prod_attempt += 1
+        # Auto-advance timers would race the async grade; stop them.
+        self._clear_auto_advance_timers()
+        self.web.eval("_setProductionGrading(true);")
+
+        card_id = self.card.id
+        question = self.card.question()
+        expected = self.typeCorrect or ""
+        attempt = self._prod_attempt
+
+        def op(_col: Any) -> aqt.speedrun_ai.GradeResult:
+            # Runs off the UI thread; must not touch Qt/webview.
+            return aqt.speedrun_ai.grade(question, expected, typed)
+
+        def on_success(result: aqt.speedrun_ai.GradeResult) -> None:
+            if self._stale(card_id):
+                return
+            self._on_grade_result(result, attempt)
+
+        def on_failure(exc: Exception) -> None:
+            if self._stale(card_id):
+                return
+            self._prod_grading = False
+            self.web.eval("_setProductionGrading(false);")
+            tooltip("AI grading unavailable — grade it yourself.")
+            self._showAnswer()
+
+        QueryOp(parent=self.mw, op=op, success=on_success).failure(
+            on_failure
+        ).without_collection().run_in_background()
+
+    def _stale(self, card_id: CardId) -> bool:
+        # A late result must not grade the wrong card (undo/edit/advance moved on).
+        return self.card is None or self.card.id != card_id or self.state != "question"
+
+    def _on_grade_result(
+        self, result: aqt.speedrun_ai.GradeResult, attempt: int
+    ) -> None:
+        self._prod_grading = False
+        if result.abstained:
+            # Couldn't ground a grade -> reveal for native self-grade.
+            self.web.eval("_setProductionGrading(false);")
+            self._showAnswer()
+            return
+        if result.correct:
+            self._reveal_and_autograde(
+                self._decide_ease("correct", result.ease, attempt), result.feedback
+            )
+            return
+        if attempt >= self.MAX_PROD_ATTEMPTS:
+            self._reveal_and_autograde(
+                self._decide_ease(result.verdict, result.ease, attempt),
+                result.feedback,
+            )
+            return
+        # Wrong, attempts remaining: show a scaffolded hint and let them retry.
+        self._render_hint(result.feedback, result.hint)
+
+    def _render_hint(self, feedback: str, hint: str) -> None:
+        body = (
+            f"<div class='ai-verdict'>{html.escape(feedback)}</div>"
+            f"<div class='ai-hint'>💡 {html.escape(hint)}</div>"
+            "<div class='ai-actions'>Refine your answer and press "
+            "<b>Grade</b> again, or <a href='#' "
+            "onclick=\"pycmd('reveal');return false;\">reveal the answer</a>.</div>"
+        )
+        self.web.eval(f"_showProductionFeedback({json.dumps(body)});")
+
+    def _reveal_and_autograde(self, ease: int, feedback: str) -> None:
+        self.web.eval("_setProductionGrading(false);")
         self._showAnswer()
+        if feedback:
+            body = f"<div class='ai-verdict'>{html.escape(feedback)}</div>"
+            self.web.eval(f"_showProductionFeedback({json.dumps(body)});")
+        # Auto-submit the LLM-decided grade shortly after the answer is shown, so
+        # the learner sees the correct answer before the card advances.
+        self.mw.progress.timer(
+            1200,
+            lambda: self._answerCard(cast(Literal[1, 2, 3, 4], ease)),
+            repeat=False,
+            parent=self.mw,
+        )
 
     # Bottom bar
     ##########################################################################
@@ -841,10 +976,12 @@ timerStopped = false;
         )
 
     def _showAnswerButton(self) -> None:
+        # Speedrun: label the button "Grade" when the free-text loop is active.
+        label = "Grade" if self._production_mode_active() else tr.studying_show_answer()
         middle = """
 <button title="{}" id="ansbut" onclick='pycmd("ans");'>{}<span class=stattxt>{}</span></button>""".format(
             tr.actions_shortcut_key(val=tr.studying_space()),
-            tr.studying_show_answer(),
+            label,
             self._remaining(),
         )
         # wrap it in a table so it has the same top margin as the ease buttons

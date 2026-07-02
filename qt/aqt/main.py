@@ -1314,6 +1314,7 @@ title="{}" {}>{}</button>""".format(
             self.action_interleave_weakness.setChecked(config.weight_by_weakness)
             # Weighting only matters when interleaving is on.
             self.action_interleave_weakness.setEnabled(config.enabled)
+        self.action_production_mode.setChecked(self.pm.production_mode_enabled())
 
     def _default_topic_tags(self) -> list[str]:
         config = self.col.sched.get_interleave_config()
@@ -1344,6 +1345,9 @@ title="{}" {}>{}</button>""".format(
             weight_by_weakness=checked,
         )
         self.reset()
+
+    def on_toggle_production_mode(self, checked: bool) -> None:
+        self.pm.set_production_mode_enabled(checked)
 
     def onStats(self) -> None:
         deck = self._selectedDeck()
@@ -1511,6 +1515,12 @@ title="{}" {}>{}</button>""".format(
             self.on_toggle_interleave_weakness,
         )
         m.menuTools.addAction(self.action_interleave_weakness)
+
+        # Speedrun: free-text production review loop (type answer -> LLM grade).
+        self.action_production_mode = QAction("Free-text grading (MCAT)", self)
+        self.action_production_mode.setCheckable(True)
+        qconnect(self.action_production_mode.triggered, self.on_toggle_production_mode)
+        m.menuTools.addAction(self.action_production_mode)
         qconnect(m.menuTools.aboutToShow, self._sync_interleave_action)
 
         # View
