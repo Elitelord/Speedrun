@@ -261,9 +261,11 @@ export function _setProductionGrading(on: boolean): void {
     if (t) {
         t.disabled = on;
     }
-    if (on) {
-        _aiFeedbackEl().innerHTML = "<span class='ai-grading'>Grading…</span>";
-    }
+    // Clear the region when grading stops, otherwise a stale "Grading…" is left
+    // behind when the grade resolves or the AI falls back to self-grading.
+    _aiFeedbackEl().innerHTML = on
+        ? "<span class='ai-grading'>Grading…</span>"
+        : "";
 }
 
 export function _emulateMobile(enabled: boolean): void {

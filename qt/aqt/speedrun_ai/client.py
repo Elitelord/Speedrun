@@ -19,7 +19,7 @@ from __future__ import annotations
 import json
 import time
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 from .config import AiConfig, get_config
 
@@ -90,7 +90,9 @@ class OpenAIClient:
         def call() -> str:
             resp = self._client.chat.completions.create(
                 model=self._config.chat_model,
-                messages=messages,
+                # The SDK's message param is a strict union; our plain dicts are
+                # accepted at runtime, so widen the static type here.
+                messages=cast("Any", messages),
                 temperature=opts.pop("temperature", 0),
                 **opts,
             )
