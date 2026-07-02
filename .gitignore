@@ -24,3 +24,5 @@ ts/.svelte-kit
 docs/_build/
 docs/autoapi/
 .complexipy_cache
+# Speedrun: never commit the OpenAI key
+/.env

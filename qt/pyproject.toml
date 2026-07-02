@@ -32,6 +32,13 @@ dependencies = [
 audio = [
   "anki-audio==0.2.2; sys.platform == 'win32' or sys.platform == 'darwin'",
 ]
+# Speedrun: opt-in cloud AI features (desktop-only). Kept out of the base wheel
+# so a stock install never pulls these; the app degrades cleanly when absent.
+ai = [
+  "openai>=1.0",
+  "numpy",
+  "rank_bm25",
+]
 qt = [
   "pyqt6==6.11.0",
   "pyqt6-qt6==6.11.0",
