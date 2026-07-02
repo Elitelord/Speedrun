@@ -1,0 +1,17 @@
+[
+  {
+    "file": "aminoacids-proteins.txt",
+    "name": "aminoacids-proteins",
+    "topic": "mcat::biobiochem"
+  },
+  {
+    "file": "thermodynamics.txt",
+    "name": "thermodynamics",
+    "topic": "mcat::chemphys"
+  },
+  {
+    "file": "action-potential.txt",
+    "name": "action-potential",
+    "topic": "mcat::psychsoc"
+  }
+]

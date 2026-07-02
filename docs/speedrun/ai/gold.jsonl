@@ -1,0 +1,14 @@
+{"front": "What type of bond joins two amino acids?", "back": "A peptide bond, an amide linkage formed by a dehydration condensation reaction between the carboxyl group and the amino group.", "source_name": "aminoacids-proteins", "label": "good"}
+{"front": "How many standard amino acids build proteins?", "back": "Twenty standard amino acids.", "source_name": "aminoacids-proteins", "label": "good"}
+{"front": "What stabilizes the alpha helix and beta pleated sheet?", "back": "Hydrogen bonds between backbone atoms.", "source_name": "aminoacids-proteins", "label": "good"}
+{"front": "What defines a protein's primary structure?", "back": "The linear sequence of amino acids in the polypeptide.", "source_name": "aminoacids-proteins", "label": "good"}
+{"front": "What element makes up the amino acid side chain?", "back": "Every side chain is a chain of pure silicon crystals attached to the ribosome.", "source_name": "aminoacids-proteins", "label": "bad"}
+{"front": "When is a reaction spontaneous by Gibbs free energy?", "back": "When the change in Gibbs free energy is negative, the reaction is spontaneous and exergonic.", "source_name": "thermodynamics", "label": "good"}
+{"front": "What does the first law of thermodynamics state?", "back": "Energy is conserved: it can be transformed but not created or destroyed.", "source_name": "thermodynamics", "label": "good"}
+{"front": "What happens to entropy in an isolated system?", "back": "The total entropy of an isolated system tends to increase.", "source_name": "thermodynamics", "label": "good"}
+{"front": "What powers endergonic reactions in cells?", "back": "Coupling to the exergonic hydrolysis of ATP to ADP and inorganic phosphate.", "source_name": "thermodynamics", "label": "good"}
+{"front": "What is the value of Gibbs free energy at equilibrium?", "back": "It equals exactly 42 kilojoules per mole for all living organisms at body temperature.", "source_name": "thermodynamics", "label": "bad"}
+{"front": "What is a neuron's resting membrane potential?", "back": "About negative seventy millivolts, with the inside negative relative to the outside.", "source_name": "action-potential", "label": "good"}
+{"front": "What causes depolarization in an action potential?", "back": "Voltage-gated sodium channels open and sodium rushes into the cell, driving the potential positive.", "source_name": "action-potential", "label": "good"}
+{"front": "What is saltatory conduction?", "back": "The signal jumps between the nodes of Ranvier in myelinated axons, increasing conduction speed.", "source_name": "action-potential", "label": "good"}
+{"front": "How fast does an action potential travel?", "back": "It travels at exactly the speed of light because neurons are superconductors at room temperature.", "source_name": "action-potential", "label": "bad"}

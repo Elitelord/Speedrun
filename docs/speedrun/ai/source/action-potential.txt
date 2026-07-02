@@ -1,0 +1,25 @@
+Neurons and the Action Potential
+
+A neuron maintains a resting membrane potential of about negative seventy
+millivolts, with the inside of the cell negative relative to the outside. This
+potential is established by the sodium-potassium pump, which moves three sodium
+ions out of the cell for every two potassium ions it moves in, and by the
+membrane's selective permeability to potassium.
+
+An action potential is a rapid, all-or-none change in membrane potential that
+travels along the axon. When a stimulus depolarizes the membrane to threshold,
+voltage-gated sodium channels open and sodium rushes into the cell, driving the
+membrane potential sharply positive. This is depolarization.
+
+Repolarization follows as the sodium channels inactivate and voltage-gated
+potassium channels open, allowing potassium to leave the cell. The membrane
+briefly becomes more negative than the resting potential, a state called
+hyperpolarization, before returning to rest.
+
+During the refractory period the neuron cannot fire a second action potential,
+which ensures the signal travels in one direction. In myelinated axons the
+signal jumps between the nodes of Ranvier in a process called saltatory
+conduction, which greatly increases conduction speed.
+
+When the action potential reaches the axon terminal it triggers the release of
+neurotransmitters into the synapse, carrying the signal to the next cell.
