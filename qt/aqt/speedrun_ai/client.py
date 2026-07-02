@@ -52,8 +52,8 @@ _GRADE_SYSTEM = (
     "against the provided expected answer and rubric — never introduce facts "
     "that are not supported by them. If the expected answer/rubric is empty or "
     "does not let you judge the response, abstain.\n"
-    "Return a compact JSON object with keys: verdict (one of \"correct\", "
-    "\"partial\", \"wrong\"), feedback (one short sentence for the student), "
+    'Return a compact JSON object with keys: verdict (one of "correct", '
+    '"partial", "wrong"), feedback (one short sentence for the student), '
     "hint (a conceptual nudge that does NOT reveal the answer; empty if "
     "verdict is correct), abstain (boolean). Output JSON only."
 )
@@ -125,9 +125,7 @@ class OpenAIClient:
     ) -> GradeResult:
         if not expected.strip():
             # Nothing to ground the grade in -> abstain rather than invent one.
-            return GradeResult(
-                VERDICT_WRONG, False, None, "", "", abstained=True
-            )
+            return GradeResult(VERDICT_WRONG, False, None, "", "", abstained=True)
         user = json.dumps(
             {
                 "question": question,
@@ -206,7 +204,11 @@ class FakeClient:
             return GradeResult(VERDICT_CORRECT, True, None, "Correct.", "")
         if overlap >= 0.25:
             return GradeResult(
-                VERDICT_PARTIAL, False, None, "Partly right.", "Reconsider the key term."
+                VERDICT_PARTIAL,
+                False,
+                None,
+                "Partly right.",
+                "Reconsider the key term.",
             )
         return GradeResult(
             VERDICT_WRONG, False, None, "Not quite.", "Think about the core concept."

@@ -95,8 +95,8 @@ Memory and Performance sections of the readiness dashboard.
                 <div class="bar empty"></div>
                 <div class="meta">
                     {#if s.cardsWithState === 0 && s.gradedReviews > 0}
-                        no FSRS memory data yet ({s.cardCount} cards) — enable FSRS and
-                        keep reviewing
+                        no FSRS memory data yet ({s.cardCount} cards) — enable FSRS and keep
+                        reviewing
                     {:else}
                         {s.gradedReviews} graded reviews so far · {s.cardCount} cards — keep
                         reviewing to unlock a score

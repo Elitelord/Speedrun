@@ -28,9 +28,9 @@ range and a give-up rule so it says when it doesn't know.
         <div class="dashboard">
             <h1>MCAT Readiness</h1>
             <p class="intro">
-                Three honest scores, each with its own uncertainty range. We never
-                blend them into one number, and we refuse to show a score until
-                there's enough of your review data to trust it.
+                Three honest scores, each with its own uncertainty range. We never blend
+                them into one number, and we refuse to show a score until there's enough
+                of your review data to trust it.
             </p>
 
             <ScoreGroup

@@ -47,8 +47,8 @@ _GEN_SYSTEM = (
     "high-quality flashcards (a specific question + a concise, correct answer) "
     "testing facts a student must know for the MCAT. Use ONLY facts stated in "
     "the text — never add outside knowledge. If the text has no testable "
-    "content, return an empty list. Output JSON: {\"cards\": [{\"front\": ..., "
-    "\"back\": ...}, ...]}."
+    'content, return an empty list. Output JSON: {"cards": [{"front": ..., '
+    '"back": ...}, ...]}.'
 )
 
 

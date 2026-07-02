@@ -1,7 +1,7 @@
 {
-  "_comment": "PRE-REGISTERED accept/reject thresholds. Committed BEFORE any generation/eval run — git history is the enforcement that the cutoff was set before looking at results. Do not edit after seeing eval output.",
-  "min_accuracy": 0.8,
-  "max_false_negative_rate": 0.1,
-  "min_recall_at_5": 0.7,
-  "min_rag_minus_bm25_recall": 0.0
+    "_comment": "PRE-REGISTERED accept/reject thresholds. Committed BEFORE any generation/eval run — git history is the enforcement that the cutoff was set before looking at results. Do not edit after seeing eval output.",
+    "min_accuracy": 0.8,
+    "max_false_negative_rate": 0.1,
+    "min_recall_at_5": 0.7,
+    "min_rag_minus_bm25_recall": 0.0
 }

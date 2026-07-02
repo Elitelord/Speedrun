@@ -75,9 +75,10 @@ service SchedulerService {
   // retrievability discounted by item difficulty. Same shape/give-up as the
   // memory score; distinct because recall overstates answering a reworded item.
   rpc ComputePerformanceScore(MemoryScoreRequest) returns (MemoryScoreResponse);
-  // Speedrun: projected MCAT readiness (total 472–528, per section 118–132) with
-  // a range, exam-coverage %, and a stricter give-up rule.
-  rpc ComputeReadinessScore(MemoryScoreRequest) returns (ReadinessScoreResponse);
+  // Speedrun: projected MCAT readiness (total 472–528, per section 118–132)
+  // with a range, exam-coverage %, and a stricter give-up rule.
+  rpc ComputeReadinessScore(MemoryScoreRequest)
+      returns (ReadinessScoreResponse);
 }
 
 // Implicitly includes any of the above methods that are not listed in the

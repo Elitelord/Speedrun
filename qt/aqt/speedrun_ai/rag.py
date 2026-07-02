@@ -87,7 +87,9 @@ def chunk_text(
     return chunks
 
 
-def build_index(chunks: list[Chunk], client: _Embedder, model: str = "") -> dict[str, Any]:
+def build_index(
+    chunks: list[Chunk], client: _Embedder, model: str = ""
+) -> dict[str, Any]:
     vectors = client.embed([c.text for c in chunks])
     dim = len(vectors[0]) if vectors else 0
     return {

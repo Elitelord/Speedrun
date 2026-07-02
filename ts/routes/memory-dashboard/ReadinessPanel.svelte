@@ -47,8 +47,8 @@ that says when it doesn't know.
 <section class="group">
     <h2>Readiness</h2>
     <p class="subtitle">
-        Projected MCAT score on the real 472–528 scale, with a likely range and
-        how much of the exam you've covered.
+        Projected MCAT score on the real 472–528 scale, with a likely range and how much
+        of the exam you've covered.
     </p>
 
     <div class="readiness" class:shown={readiness.shown}>
@@ -61,16 +61,14 @@ that says when it doesn't know.
                 Likely range {Math.round(readiness.scaledLow)}–{Math.round(
                     readiness.scaledHigh,
                 )}
-                · Confidence: {confidence()} · {pct(readiness.coverage)} of topics
-                studied
+                · Confidence: {confidence()} · {pct(readiness.coverage)} of topics studied
             </div>
         {:else}
             <div class="giveup">No readiness score yet</div>
             <div class="detail">
-                Needs ≥200 graded reviews <em>and</em> ≥50% of topics studied.
-                Currently {readiness.overall?.gradedReviews ?? 0} graded reviews · {pct(
-                    readiness.coverage,
-                )} covered.
+                Needs ≥200 graded reviews <em>and</em>
+                ≥50% of topics studied. Currently {readiness.overall?.gradedReviews ??
+                    0} graded reviews · {pct(readiness.coverage)} covered.
             </div>
         {/if}
     </div>

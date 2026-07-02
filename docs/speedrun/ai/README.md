@@ -44,7 +44,7 @@ no key) — this is what the CI test uses.
    corpus both retrievers hit near-1.0; add more source text under `source/` for
    a stronger comparison.)_
 2. **Good/bad card classifier (2×2 confusion matrix)** — the grounding gate is
-   run over the labelled gold cards. Positive = *bad card*; the **false negative**
+   run over the labelled gold cards. Positive = _bad card_; the **false negative**
    (a wrong card shipped as good) is the dangerous cell and is capped explicitly
    by `max_false_negative_rate`.
 

@@ -3,24 +3,26 @@
 
 //! Speedrun: the two "beyond memory" honest scores — Performance and Readiness.
 //!
-//! These sit alongside the memory score ([`super::memory_score`]) so the app can
-//! show three separate, honestly-uncertain numbers rather than one blended one.
+//! These sit alongside the memory score ([`super::memory_score`]) so the app
+//! can show three separate, honestly-uncertain numbers rather than one blended
+//! one.
 //!
-//! * **Performance** predicts accuracy on held-out, exam-style questions. Recall
-//!   of a flashcard overstates the odds of answering a reworded exam item, so we
-//!   discount FSRS retrievability by the card's FSRS *difficulty*: a hard item at
-//!   the same retrievability contributes a lower performance estimate. Same band
+//! * **Performance** predicts accuracy on held-out, exam-style questions.
+//!   Recall of a flashcard overstates the odds of answering a reworded exam
+//!   item, so we discount FSRS retrievability by the card's FSRS *difficulty*:
+//!   a hard item at the same retrievability contributes a lower performance
+//!   estimate. Same band
 //!   + give-up machinery as the memory score.
-//! * **Readiness** maps overall mastery onto the real MCAT scale (total 472–528,
-//!   per section 118–132), and reports a range, the **% of topics covered**, and
-//!   a stricter give-up rule (no projected score until there are enough graded
-//!   reviews *and* at least half the topics have data). We do not have
-//!   longitudinal practice-test data to calibrate the mapping, so it is a
+//! * **Readiness** maps overall mastery onto the real MCAT scale (total
+//!   472–528, per section 118–132), and reports a range, the **% of topics
+//!   covered**, and a stricter give-up rule (no projected score until there are
+//!   enough graded reviews *and* at least half the topics have data). We do not
+//!   have longitudinal practice-test data to calibrate the mapping, so it is a
 //!   deliberately simple affine map, always shown with its range and coverage.
 //!
 //! Both reuse the same FSRS retrievability call and topic classifier as the
-//! memory score, via the shared [`Collection::gather_card_facts`] gather, so the
-//! three numbers stay consistent.
+//! memory score, via the shared [`Collection::gather_card_facts`] gather, so
+//! the three numbers stay consistent.
 
 use std::collections::HashMap;
 
@@ -46,8 +48,8 @@ const READINESS_MIN_COVERAGE: f32 = 0.5;
 /// Band half-width constant: `k / sqrt(graded_reviews)` (matches memory score).
 const BAND_K: f32 = 0.5;
 
-/// How strongly FSRS difficulty (1..10) discounts retrievability when turning it
-/// into a performance estimate. At the maximum difficulty a card contributes
+/// How strongly FSRS difficulty (1..10) discounts retrievability when turning
+/// it into a performance estimate. At the maximum difficulty a card contributes
 /// `1 - PERF_DIFFICULTY_WEIGHT` of its retrievability.
 const PERF_DIFFICULTY_WEIGHT: f32 = 0.4;
 
@@ -139,11 +141,7 @@ impl Collection {
     /// Gather the per-card facts (topic, retrievability, difficulty, graded
     /// review count, last review time) shared by the performance and readiness
     /// scores. Mirrors the load path in [`super::memory_score`].
-    fn gather_card_facts(
-        &mut self,
-        search: &str,
-        topic_tags: &[String],
-    ) -> Result<Vec<CardFacts>> {
+    fn gather_card_facts(&mut self, search: &str, topic_tags: &[String]) -> Result<Vec<CardFacts>> {
         let mut graded_by_card: HashMap<CardId, u32> = HashMap::new();
         for entry in self.revlog_for_srs(search)? {
             if entry.has_rating_and_affects_scheduling() {

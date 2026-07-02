@@ -196,12 +196,20 @@ def test_classify_cards_catches_bad() -> None:
 
     index = {
         "entries": [
-            {"chunk_id": "s#0", "source_name": "s", "text": "peptide bonds join amino acids"},
+            {
+                "chunk_id": "s#0",
+                "source_name": "s",
+                "text": "peptide bonds join amino acids",
+            },
         ]
     }
     gold = [
         {"back": "peptide bonds join amino acids", "source_name": "s", "label": "good"},
-        {"back": "quartz lattice spins the nucleus", "source_name": "s", "label": "bad"},
+        {
+            "back": "quartz lattice spins the nucleus",
+            "source_name": "s",
+            "label": "bad",
+        },
     ]
     c = classify_cards(gold, index)
     assert c.tn == 1  # good card shipped
@@ -230,10 +238,24 @@ def test_run_eval_pass_and_fail() -> None:
     from aqt.speedrun_ai.eval import run_eval
     from aqt.speedrun_ai.rag import Retrieved
 
-    index = {"entries": [{"chunk_id": "s#0", "source_name": "s", "text": "peptide amino acids"}]}
+    index = {
+        "entries": [
+            {"chunk_id": "s#0", "source_name": "s", "text": "peptide amino acids"}
+        ]
+    }
     gold = [
-        {"front": "q", "back": "peptide amino acids", "source_name": "s", "label": "good"},
-        {"front": "q", "back": "moon cheese reactor", "source_name": "s", "label": "bad"},
+        {
+            "front": "q",
+            "back": "peptide amino acids",
+            "source_name": "s",
+            "label": "good",
+        },
+        {
+            "front": "q",
+            "back": "moon cheese reactor",
+            "source_name": "s",
+            "label": "bad",
+        },
     ]
     hit = lambda q: [Retrieved("s#0", "s", "", 1.0)]  # noqa: E731
     miss = lambda q: []  # noqa: E731
