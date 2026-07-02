@@ -567,6 +567,15 @@ create table if not exists profiles
     def set_production_mode_enabled(self, on: bool) -> None:
         self.meta["speedrun_production_mode"] = on
 
+    # When on, the free-text production loop applies to *any* card with a back
+    # field, not only cards whose notetype has a {{type:}} field — so imported
+    # decks work without a manual Change Notetype step.
+    def type_in_default_enabled(self) -> bool:
+        return self.meta.get("speedrun_type_in_default", True)
+
+    def set_type_in_default_enabled(self, on: bool) -> None:
+        self.meta["speedrun_type_in_default"] = on
+
     def get_answer_key(self, ease: int) -> str | None:
         return self.meta.setdefault("answer_keys", self.default_answer_keys).get(ease)
 

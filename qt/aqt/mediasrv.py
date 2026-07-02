@@ -423,6 +423,7 @@ def is_sveltekit_page(path: str) -> bool:
         "import-page",
         "image-occlusion",
         "memory-dashboard",
+        "settings",
     ]
 
 
@@ -705,6 +706,65 @@ def save_custom_colours() -> bytes:
     return b""
 
 
+# Speedrun: consolidated settings page. These use JSON (encoded as bytes) rather
+# than protobuf, so no .proto/Rust rebuild is needed to add a new setting.
+_DEFAULT_MCAT_TAGS = ["mcat::biobiochem", "mcat::chemphys", "mcat::psychsoc"]
+
+
+def speedrun_get_settings() -> bytes:
+    import json
+
+    from aqt.speedrun_ai import ai_enabled
+    from aqt.speedrun_ai.config import get_config
+
+    mw = aqt.mw
+    interleave = mw.col.sched.get_interleave_config()
+    ai_cfg = get_config()
+    payload = {
+        "interleave": {
+            "enabled": interleave.enabled,
+            "weightByWeakness": interleave.weight_by_weakness,
+            "topicTags": list(interleave.topic_tags) or _DEFAULT_MCAT_TAGS,
+        },
+        "review": {
+            "productionMode": mw.pm.production_mode_enabled(),
+            "typeInDefault": mw.pm.type_in_default_enabled(),
+        },
+        "ai": {
+            "keyDetected": ai_enabled(),
+            "model": ai_cfg.chat_model,
+            "embedModel": ai_cfg.embed_model,
+        },
+    }
+    return json.dumps(payload).encode("utf-8")
+
+
+def speedrun_set_settings() -> bytes:
+    import json
+
+    mw = aqt.mw
+    data = json.loads(request.data.decode("utf-8") or "{}")
+    review = data.get("review", {})
+    interleave = data.get("interleave")
+
+    def apply() -> None:
+        if "productionMode" in review:
+            mw.pm.set_production_mode_enabled(bool(review["productionMode"]))
+        if "typeInDefault" in review:
+            mw.pm.set_type_in_default_enabled(bool(review["typeInDefault"]))
+        if interleave is not None:
+            tags = [t.strip() for t in interleave.get("topicTags", []) if t.strip()]
+            mw.col.sched.set_interleave_config(
+                enabled=bool(interleave.get("enabled", False)),
+                topic_tags=tags or _DEFAULT_MCAT_TAGS,
+                weight_by_weakness=bool(interleave.get("weightByWeakness", False)),
+            )
+        mw.reset()
+
+    mw.taskman.run_on_main(apply)
+    return b""
+
+
 post_handler_list = [
     congrats_info,
     get_deck_configs_for_update,
@@ -721,6 +781,8 @@ post_handler_list = [
     deck_options_require_close,
     deck_options_ready,
     save_custom_colours,
+    speedrun_get_settings,
+    speedrun_set_settings,
 ]
 
 

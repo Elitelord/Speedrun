@@ -763,6 +763,9 @@ class AnkiQt(QMainWindow):
             cleanup(state)
         self.clearStateShortcuts()
         self.state = state
+        # Speedrun: the study flow (decks/overview/review) lives under "Decks".
+        if state in ("deckBrowser", "overview", "review"):
+            self._highlight_nav("decks")
         gui_hooks.state_will_change(state, oldState)
         getattr(self, f"_{state}State", lambda *_: None)(oldState, *args)
         if state != "resetRequired":
@@ -952,6 +955,17 @@ title="{}" {}>{}</button>""".format(
         self.toolbar = Toolbar(self, tweb)
         # main area
         self.web = MainWebView(self)
+        # Speedrun: a left navigation rail wrapping the main webview in a
+        # horizontal splitter, so Decks / Readiness / Stats / Settings are one
+        # click away. The top/bottom toolbars stay full-width above and below.
+        self.nav_sidebar = self._build_nav_sidebar()
+        self.central_splitter = QSplitter(Qt.Orientation.Horizontal)
+        self.central_splitter.setObjectName("centralSplitter")
+        self.central_splitter.setChildrenCollapsible(False)
+        self.central_splitter.addWidget(self.nav_sidebar)
+        self.central_splitter.addWidget(self.web)
+        self.central_splitter.setStretchFactor(0, 0)
+        self.central_splitter.setStretchFactor(1, 1)
         # bottom area
         sweb = self.bottomWeb = BottomWebView(self)
         sweb.setFocusPolicy(Qt.FocusPolicy.WheelFocus)
@@ -961,9 +975,11 @@ title="{}" {}>{}</button>""".format(
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.setSpacing(0)
         self.mainLayout.addWidget(tweb)
-        self.mainLayout.addWidget(self.web)
+        self.mainLayout.addWidget(self.central_splitter)
         self.mainLayout.addWidget(sweb)
         self.form.centralwidget.setLayout(self.mainLayout)
+        self._restore_nav_splitter_state()
+        qconnect(self.central_splitter.splitterMoved, self._save_nav_splitter_state)
 
         # force webengine processes to load before cwd is changed
         if is_win:
@@ -971,6 +987,70 @@ title="{}" {}>{}</button>""".format(
                 webview.force_load_hack()
 
         gui_hooks.card_review_webview_did_init(self.web, AnkiWebViewKind.MAIN)
+
+    # Speedrun: left navigation rail
+    ##########################################################################
+
+    def _build_nav_sidebar(self) -> QWidget:
+        """A slim vertical button rail: Decks / Readiness / Stats / Settings."""
+        sidebar = QWidget()
+        sidebar.setObjectName("speedrunNav")
+        sidebar.setMinimumWidth(120)
+        sidebar.setMaximumWidth(240)
+        layout = QVBoxLayout(sidebar)
+        layout.setContentsMargins(6, 10, 6, 10)
+        layout.setSpacing(4)
+
+        self._nav_buttons: dict[str, QPushButton] = {}
+        entries = [
+            ("decks", "Decks", lambda: self.moveToState("deckBrowser")),
+            ("readiness", "Readiness", self.on_memory_dashboard),
+            ("stats", "Stats", self.onStats),
+            ("settings", "Settings", self.on_speedrun_settings),
+        ]
+        for key, label, handler in entries:
+            btn = QPushButton(label)
+            btn.setCheckable(True)
+            btn.setAutoExclusive(True)
+            btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            btn.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+            qconnect(btn.clicked, lambda _=False, k=key, h=handler: self._on_nav(k, h))
+            layout.addWidget(btn)
+            self._nav_buttons[key] = btn
+        layout.addStretch(1)
+        self._nav_buttons["decks"].setChecked(True)
+        return sidebar
+
+    def _on_nav(self, key: str, handler: Callable[[], None]) -> None:
+        self._nav_buttons[key].setChecked(True)
+        handler()
+
+    def _highlight_nav(self, key: str) -> None:
+        """Reflect the active screen in the rail (called from moveToState)."""
+        btn = getattr(self, "_nav_buttons", {}).get(key)
+        if btn is not None:
+            btn.setChecked(True)
+
+    def _save_nav_splitter_state(self, *_args: Any) -> None:
+        if self.pm and self.pm.meta is not None:
+            state = bytes(self.central_splitter.saveState().toBase64().data())
+            self.pm.meta["speedrun_nav_splitter"] = state.decode("ascii")
+
+    def _restore_nav_splitter_state(self) -> None:
+        saved = None
+        if self.pm and self.pm.meta is not None:
+            saved = self.pm.meta.get("speedrun_nav_splitter")
+        if saved:
+            self.central_splitter.restoreState(
+                QByteArray.fromBase64(saved.encode("ascii"))
+            )
+        else:
+            self.central_splitter.setSizes([160, 900])
+
+    def on_speedrun_settings(self) -> None:
+        from aqt.speedrun_settings import SpeedrunSettingsDialog
+
+        SpeedrunSettingsDialog(self)
 
     def closeAllWindows(self, onsuccess: Callable) -> None:
         aqt.dialogs.closeAll(onsuccess)
@@ -1500,6 +1580,11 @@ title="{}" {}>{}</button>""".format(
         self.action_memory_dashboard = QAction("MCAT Readiness", self)
         qconnect(self.action_memory_dashboard.triggered, self.on_memory_dashboard)
         m.menuTools.addAction(self.action_memory_dashboard)
+
+        # Speedrun: consolidated settings page (also reachable from the nav rail).
+        self.action_speedrun_settings = QAction("MCAT Settings", self)
+        qconnect(self.action_speedrun_settings.triggered, self.on_speedrun_settings)
+        m.menuTools.addAction(self.action_speedrun_settings)
 
         # Speedrun: topic-aware interleaving toggle
         self.action_interleave = QAction("Interleave MCAT topics", self)
