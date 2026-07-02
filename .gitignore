@@ -26,3 +26,8 @@ docs/autoapi/
 .complexipy_cache
 # Speedrun: never commit the OpenAI key
 /.env
+# Speedrun: AI pipeline run outputs (regenerated; not source)
+docs/speedrun/ai/index.json
+docs/speedrun/ai/eval-result.json
+docs/speedrun/ai/eval-report.md
+docs/speedrun/ai/generated/

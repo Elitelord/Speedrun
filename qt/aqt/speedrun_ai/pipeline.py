@@ -167,11 +167,15 @@ def _client(use_fake: bool) -> Any:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="speedrun_ai.pipeline")
-    parser.add_argument("--fake", action="store_true", help="use the offline stub client")
+    # --fake is accepted either before or after the subcommand.
+    common = argparse.ArgumentParser(add_help=False)
+    common.add_argument(
+        "--fake", action="store_true", help="use the offline stub client"
+    )
+    parser = argparse.ArgumentParser(prog="speedrun_ai.pipeline", parents=[common])
     sub = parser.add_subparsers(dest="cmd", required=True)
     for name in ("build-index", "generate", "eval", "emit"):
-        sub.add_parser(name)
+        sub.add_parser(name, parents=[common])
     args = parser.parse_args(argv)
 
     if args.cmd == "emit":

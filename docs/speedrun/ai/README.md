@@ -7,12 +7,16 @@ gold set with a pre-registered cutoff**, and only then emit passing cards.
 
 ## Setup
 
-The AI features are an opt-in extra so the base app never pulls them:
+The AI features are an opt-in extra so the base app never pulls them. Install
+the three packages into the built engine's venv (`out/pyenv`) — the environment
+`just run` and the pipeline use:
 
 ```
-out/pyenv/Scripts/python.exe -m uv pip install openai numpy rank_bm25
-# (or: uv sync --extra ai)
+uv pip install --python out/pyenv/Scripts/python.exe openai numpy rank_bm25
 ```
+
+(`uv sync --extra ai` won't work: the extra is defined on the `aqt` workspace
+member and `uv sync` targets a separate root `.venv`, not `out/pyenv`.)
 
 Put your key in a repo-root `.env` (git-ignored):
 
