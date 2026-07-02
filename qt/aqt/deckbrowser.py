@@ -91,6 +91,7 @@ class DeckBrowser:
     def set_view(self, view: str) -> None:
         """Switch the main-window view and re-render. Called by the nav rail."""
         self._view = view
+        self.mw._highlight_nav(view if view != "library" else "home")
         if self.mw.state == "deckBrowser":
             self.refresh()
 
@@ -328,7 +329,13 @@ html, body { background:var(--sr-bg) !important; color:var(--sr-ink) !important;
             ],
             context=self,
         )
-        self._drawButtons()
+        # The Get-Shared / Create / Import bottom bar only makes sense on the
+        # deck-oriented views; hide it on Progress and Settings.
+        if self._view in ("home", "library"):
+            self._drawButtons()
+            self.mw.bottomWeb.show()
+        else:
+            self.mw.bottomWeb.hide()
         if offset is not None:
             self._scrollToOffset(offset)
         gui_hooks.deck_browser_did_render(self)
@@ -473,12 +480,29 @@ html, body { background:var(--sr-bg) !important; color:var(--sr-ink) !important;
             "</div>"
         )
 
-    def _render_readiness(self) -> str:
-        r = self._render_data.readiness
+    @staticmethod
+    def _topic_label(label: str) -> str:
+        return (label.split("::")[-1] if label else "").title()
+
+    def _pct_rows(self, response: Any) -> str:
+        """Per-topic percentage rows for a memory/performance response."""
         rows = ""
-        for topic in r.topics:
+        for topic in response.topics:
+            if topic.shown and topic.cards_with_state > 0:
+                val = f"{self._pct(topic.estimate)}%"
+            else:
+                val = '<span style="color:var(--sr-muted)">not enough data</span>'
+            rows += (
+                f'<div class="sec-row"><span class="k">{self._topic_label(topic.label)}</span>'
+                f"<span>{val}</span></div>"
+            )
+        return rows or '<div class="sec-row"><span>No topics configured.</span></div>'
+
+    def _readiness_rows(self) -> str:
+        rows = ""
+        for topic in self._render_data.readiness.topics:
             mastery = topic.mastery
-            label = (mastery.label.split("::")[-1] if mastery else "").title()
+            label = self._topic_label(mastery.label if mastery else "")
             if mastery and mastery.shown and mastery.cards_with_state > 0:
                 val = (
                     f"{round(topic.scaled_estimate)} "
@@ -492,16 +516,26 @@ html, body { background:var(--sr-bg) !important; color:var(--sr-ink) !important;
             '<div class="sec-row"><span class="k">CARS</span>'
             '<span style="color:var(--sr-muted)">coming with the CARS module</span></div>'
         )
+        return rows
+
+    def _render_readiness(self) -> str:
+        d = self._render_data
         return (
             '<div id="speedrunApp">'
-            '<div class="section-head"><h1>Readiness</h1>'
+            '<div class="section-head"><h1>Progress</h1>'
             "<a onclick=\"pycmd('view:home')\">← Home</a></div>"
-            '<p class="lead">Projected MCAT total (472–528) as the sum of the four '
-            "sections, plus your memory and exam-style performance.</p>"
+            '<p class="lead">Your three honest scores, broken down by MCAT '
+            "section. Projected total is the sum of the four sections.</p>"
             + self._scores_row()
-            + '<div class="section-head"><h2>By section</h2></div>'
-            + f'<div class="panel">{rows}</div>'
-            + "</div>"
+            + f'<div class="foot">{d.studied_today}</div>'
+            + '<div class="section-head"><h2>Readiness by section</h2></div>'
+            + f'<div class="panel">{self._readiness_rows()}</div>'
+            + '<div class="section-head"><h2>Memory by section</h2></div>'
+            + f'<div class="panel">{self._pct_rows(d.memory)}</div>'
+            + '<div class="section-head"><h2>Performance by section</h2></div>'
+            + f'<div class="panel">{self._pct_rows(d.performance)}</div>'
+            + '<div class="section-head"><h2>Detailed history</h2>'
+            "<a onclick=\"pycmd('advanced:stats')\">Open graphs →</a></div>" + "</div>"
         )
 
     def _render_settings(self) -> str:
@@ -586,6 +620,9 @@ html, body { background:var(--sr-bg) !important; color:var(--sr-ink) !important;
         tooltip("Settings saved", parent=self.mw)
         self.mw.reset()
 
+    def _open_stats(self) -> None:
+        aqt.dialogs.open("NewDeckStats", self.mw)
+
     def _run_advanced(self, action: str) -> None:
         handlers: dict[str, Any] = {
             "preferences": self.mw.onPrefs,
@@ -594,6 +631,7 @@ html, body { background:var(--sr-bg) !important; color:var(--sr-ink) !important;
             "export": self.mw.onExport,
             "checkdb": self.mw.onCheckDB,
             "emptycards": self.mw.onEmptyCards,
+            "stats": self._open_stats,
         }
         handler = handlers.get(action)
         if handler:

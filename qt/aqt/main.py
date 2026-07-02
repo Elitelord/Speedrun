@@ -959,38 +959,52 @@ title="{}" {}>{}</button>""".format(
         self.toolbar = Toolbar(self, tweb)
         # main area
         self.web = MainWebView(self)
-        # Speedrun: a left navigation rail wrapping the main webview in a
-        # horizontal splitter, so Decks / Readiness / Stats / Settings are one
-        # click away. The top/bottom toolbars stay full-width above and below.
-        self.nav_sidebar = self._build_nav_sidebar()
-        self.central_splitter = QSplitter(Qt.Orientation.Horizontal)
-        self.central_splitter.setObjectName("centralSplitter")
-        self.central_splitter.setChildrenCollapsible(False)
-        self.central_splitter.addWidget(self.nav_sidebar)
-        self.central_splitter.addWidget(self.web)
-        self.central_splitter.setStretchFactor(0, 0)
-        self.central_splitter.setStretchFactor(1, 1)
         # bottom area
         sweb = self.bottomWeb = BottomWebView(self)
         sweb.setFocusPolicy(Qt.FocusPolicy.WheelFocus)
         sweb.disable_zoom()
-        # add in a layout
+        # Speedrun: a full-height left navigation rail. The rail spans top to
+        # bottom; the (hidden) top toolbar, the main webview and the bottom bar
+        # stack in a right-hand column, so any bottom bar ends at the rail
+        # instead of overlapping it.
+        self.nav_sidebar = self._build_nav_sidebar()
+        right_column = QWidget()
+        right_layout = QVBoxLayout(right_column)
+        right_layout.setContentsMargins(0, 0, 0, 0)
+        right_layout.setSpacing(0)
+        right_layout.addWidget(tweb)
+        right_layout.addWidget(self.web)
+        right_layout.addWidget(sweb)
+
+        self.central_splitter = QSplitter(Qt.Orientation.Horizontal)
+        self.central_splitter.setObjectName("centralSplitter")
+        self.central_splitter.setChildrenCollapsible(False)
+        self.central_splitter.setHandleWidth(1)
+        self.central_splitter.setStyleSheet(
+            "QSplitter::handle { background: #e5e9f0; }"
+        )
+        self.central_splitter.addWidget(self.nav_sidebar)
+        self.central_splitter.addWidget(right_column)
+        self.central_splitter.setStretchFactor(0, 0)
+        self.central_splitter.setStretchFactor(1, 1)
+
         self.mainLayout = QVBoxLayout()
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.mainLayout.setSpacing(0)
-        self.mainLayout.addWidget(tweb)
         self.mainLayout.addWidget(self.central_splitter)
-        self.mainLayout.addWidget(sweb)
         self.form.centralwidget.setLayout(self.mainLayout)
         self._restore_nav_splitter_state()
         qconnect(self.central_splitter.splitterMoved, self._save_nav_splitter_state)
 
         # Speedrun: the left rail replaces the top toolbar's navigation, so keep
-        # the top toolbar hidden and neutralise its many re-show call sites. The
-        # Qt menu bar is likewise hidden — its actions live in Settings ->
-        # Advanced (shortcuts still work).
+        # the top toolbar permanently collapsed (it re-shows itself from many
+        # call sites, so neutralise show/height too). The Qt menu bar is likewise
+        # hidden — its actions live in Settings -> Advanced (shortcuts still work).
         tweb.hide()
+        tweb.setFixedHeight(0)
+        tweb.setMaximumHeight(0)
         tweb.show = lambda *a, **k: None  # type: ignore[method-assign]
+        tweb.adjustHeightToFit = lambda *a, **k: None  # type: ignore[method-assign]
         self.hide_menubar()
 
         # force webengine processes to load before cwd is changed
@@ -1048,12 +1062,10 @@ title="{}" {}>{}</button>""".format(
             self._nav_buttons[key] = btn
 
         add_button("home", "Home", lambda: self.show_deck_view("home"), True)
-        add_button("add", "Add", self.onAddCard, False)
-        add_button("browse", "Browse", self.onBrowse, False)
+        add_button("cards", "Cards", self.onBrowse, False)
         add_button(
-            "readiness", "Readiness", lambda: self.show_deck_view("readiness"), True
+            "readiness", "Progress", lambda: self.show_deck_view("readiness"), True
         )
-        add_button("stats", "Stats", self.onStats, False)
         add_button(
             "settings", "Settings", lambda: self.show_deck_view("settings"), True
         )
@@ -1263,6 +1275,11 @@ title="{}" {}>{}</button>""".format(
         return True
 
     def setupStyle(self) -> None:
+        # Speedrun: the MCAT app is a light, white-background app — force the
+        # light theme so the window chrome (title bar, toolbars, dialogs) matches
+        # the in-window pages instead of following a dark OS theme.
+        if self.pm.theme() != Theme.LIGHT:
+            self.pm.set_theme(Theme.LIGHT)
         theme_manager.apply_style()
         if is_lin:
             # On Linux, the check requires invoking an external binary,
