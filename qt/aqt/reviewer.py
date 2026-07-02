@@ -689,8 +689,9 @@ class Reviewer:
         if url == "ans":
             self._getTypedAnswer()
         elif url == "reveal":
-            # Speedrun: user gave up in the free-text loop -> reveal + lapse.
-            self._reveal_and_autograde(1, "")
+            # Speedrun: user gave up in the free-text loop -> reveal the answer
+            # and let them grade it themselves.
+            self._reveal_with_feedback(1, "")
         elif url.startswith("ease"):
             val: Literal[1, 2, 3, 4] = int(url[4:])  # type: ignore
             self._answerCard(val)
@@ -964,12 +965,12 @@ class Reviewer:
             self._showAnswer()
             return
         if result.correct:
-            self._reveal_and_autograde(
+            self._reveal_with_feedback(
                 self._decide_ease("correct", result.ease, attempt), result.feedback
             )
             return
         if attempt >= self.MAX_PROD_ATTEMPTS:
-            self._reveal_and_autograde(
+            self._reveal_with_feedback(
                 self._decide_ease(result.verdict, result.ease, attempt),
                 result.feedback,
             )
@@ -987,20 +988,25 @@ class Reviewer:
         )
         self.web.eval(f"_showProductionFeedback({json.dumps(body)});")
 
-    def _reveal_and_autograde(self, ease: int, feedback: str) -> None:
+    _EASE_LABELS = {1: "Again", 2: "Hard", 3: "Good", 4: "Easy"}
+
+    def _reveal_with_feedback(self, ease: int, feedback: str) -> None:
+        # Reveal the answer and the AI's verdict, then let the learner choose a
+        # grade themselves — we surface the AI's suggestion but never auto-advance,
+        # so they can read the feedback and pick when ready.
         self.web.eval("_setProductionGrading(false);")
         self._showAnswer()
+        suggested = self._EASE_LABELS.get(ease, "")
+        parts = ""
         if feedback:
-            body = f"<div class='ai-verdict'>{html.escape(feedback)}</div>"
-            self.web.eval(f"_showProductionFeedback({json.dumps(body)});")
-        # Auto-submit the LLM-decided grade shortly after the answer is shown, so
-        # the learner sees the correct answer before the card advances.
-        self.mw.progress.timer(
-            1200,
-            lambda: self._answerCard(cast(Literal[1, 2, 3, 4], ease)),
-            repeat=False,
-            parent=self.mw,
-        )
+            parts += f"<div class='ai-verdict'>{html.escape(feedback)}</div>"
+        if suggested:
+            parts += (
+                "<div class='ai-actions'>Suggested grade: "
+                f"<b>{suggested}</b> — pick a button when you're ready.</div>"
+            )
+        if parts:
+            self.web.eval(f"_showProductionFeedback({json.dumps(parts)});")
 
     # Bottom bar
     ##########################################################################
