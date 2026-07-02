@@ -4,9 +4,13 @@
 """Speedrun: build the pre-seeded interleaved MCAT deck (.apkg) from the section
 TSVs in this folder.
 
-Each TSV line is `front<TAB>back`; every card in a section file is tagged with
-that section's tag so the topic-aware interleaving scheduler can round-robin
-across them. Run with the built pylib on PYTHONPATH, e.g.:
+Each TSV line is `front<TAB>back` (with an optional third `source_name` column
+written by the AI pipeline's emit step); every card in a section file is tagged
+with that section's tag so the topic-aware interleaving scheduler can round-robin
+across them, plus a `source::<slug>` tag when a source is present. Cards use the
+built-in "Basic (type in the answer)" notetype so the free-text production loop
+works out of the box — no Change Notetype needed. Run with the built pylib on
+PYTHONPATH, e.g.:
 
     PYTHONPATH="pylib;out/pylib" out/pyenv/scripts/python.exe \
         docs/speedrun/seed-deck/build_apkg.py
@@ -15,9 +19,20 @@ across them. Run with the built pylib on PYTHONPATH, e.g.:
 from __future__ import annotations
 
 import os
+import re
 import tempfile
 
 from anki.collection import Collection, DeckIdLimit, ExportAnkiPackageOptions
+
+# Built-in notetype with a {{type:Back}} field, so the free-text grading loop
+# triggers automatically on every seed card.
+TYPE_IN_NOTETYPE = "Basic (type in the answer)"
+
+
+def _source_slug(name: str) -> str:
+    """Turn a free-text source name into a tag-safe slug (no whitespace)."""
+    slug = re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
+    return slug or "unknown"
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SECTIONS = [
@@ -49,8 +64,8 @@ def main() -> None:
         col.decks.set_config_id_for_deck_dict(deck, conf_id)
         col.decks.save(deck)
 
-        basic = col.models.by_name("Basic")
-        assert basic is not None
+        notetype = col.models.by_name(TYPE_IN_NOTETYPE)
+        assert notetype is not None, f"missing built-in notetype {TYPE_IN_NOTETYPE!r}"
 
         total = 0
         for fname, tag in SECTIONS:
@@ -60,11 +75,15 @@ def main() -> None:
                     line = line.rstrip("\n")
                     if not line:
                         continue
-                    front, back = line.split("\t", 1)
-                    note = col.new_note(basic)
+                    fields = line.split("\t")
+                    front, back = fields[0], fields[1]
+                    source = fields[2] if len(fields) > 2 else ""
+                    note = col.new_note(notetype)
                     note["Front"] = front
                     note["Back"] = back
                     note.tags = [tag]
+                    if source.strip():
+                        note.tags.append(f"source::{_source_slug(source)}")
                     col.add_note(note, deck_id)
                     total += 1
 

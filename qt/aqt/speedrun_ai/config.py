@@ -3,8 +3,9 @@
 
 """Speedrun AI: configuration + secret loading.
 
-The OpenAI API key is read from ``OPENAI_API_KEY`` in a repo-root ``.env`` file
-(git-ignored) or the process environment. Nothing here imports the ``openai``
+The OpenAI API key is read from ``OPENAI_API_KEY`` (or the common
+``OPEN_AI_API_KEY`` misspelling) in a repo-root ``.env`` file (git-ignored) or
+the process environment. Nothing here imports the ``openai``
 SDK or any part of ``aqt`` — it is deliberately dependency-free so it can be
 imported (and unit-tested) without the optional ``ai`` extra installed and
 without a running Qt app.
@@ -85,8 +86,11 @@ class AiConfig:
 
 def get_config() -> AiConfig:
     env = _env()
+    # Accept the common ``OPEN_AI_API_KEY`` misspelling as an alias so a
+    # mistyped var name doesn't silently fall back to self-grading.
+    api_key = (env.get("OPENAI_API_KEY") or env.get("OPEN_AI_API_KEY") or "").strip()
     return AiConfig(
-        api_key=env.get("OPENAI_API_KEY", "").strip(),
+        api_key=api_key,
         chat_model=env.get("OPENAI_MODEL", DEFAULT_CHAT_MODEL).strip()
         or DEFAULT_CHAT_MODEL,
         embed_model=env.get("OPENAI_EMBED_MODEL", DEFAULT_EMBED_MODEL).strip()
