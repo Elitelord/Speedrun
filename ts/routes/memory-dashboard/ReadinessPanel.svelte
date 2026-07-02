@@ -2,11 +2,12 @@
 Copyright: Ankitects Pty Ltd and contributors
 License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
-Speedrun: the projected MCAT readiness panel. Shows a total on the real 472–528
-scale with a likely range and the % of topics covered, plus a per-section
-projection on 118–132. It refuses to project a score until there are enough
-graded reviews AND at least half the topics have been studied — an honest score
-that says when it doesn't know.
+Speedrun: the projected MCAT readiness panel. The total (472–528) is the sum of
+the four sections (each 118–132): studied sections use their projection, and
+unstudied sections (including CARS, which has no flashcard topic yet) contribute
+a neutral mid-section prior spanning the full section range — so the total's
+range honestly widens with every section you haven't covered. It refuses to
+project a total until at least half the four sections have been studied.
 -->
 <script lang="ts">
     import type {
@@ -42,13 +43,19 @@ that says when it doesn't know.
     function sectionShown(t: ReadinessScore): boolean {
         return !!t.mastery && t.mastery.shown && t.mastery.cardsWithState > 0;
     }
+
+    // Coverage is reported as sections studied out of the four MCAT sections.
+    const MCAT_SECTIONS = 4;
+    function sectionsCovered(): number {
+        return Math.round(readiness.coverage * MCAT_SECTIONS);
+    }
 </script>
 
 <section class="group">
     <h2>Readiness</h2>
     <p class="subtitle">
-        Projected MCAT score on the real 472–528 scale, with a likely range and how much
-        of the exam you've covered.
+        Projected MCAT total on the real 472–528 scale — the sum of the four sections,
+        with a likely range that widens for sections you haven't studied yet.
     </p>
 
     <div class="readiness" class:shown={readiness.shown}>
@@ -61,14 +68,23 @@ that says when it doesn't know.
                 Likely range {Math.round(readiness.scaledLow)}–{Math.round(
                     readiness.scaledHigh,
                 )}
-                · Confidence: {confidence()} · {pct(readiness.coverage)} of topics studied
+                · Confidence: {confidence()} · {sectionsCovered()}/{MCAT_SECTIONS} sections
+                studied
             </div>
+            {#if sectionsCovered() < MCAT_SECTIONS}
+                <div class="detail note">
+                    Includes a wide-uncertainty estimate for the {MCAT_SECTIONS -
+                        sectionsCovered()} section{MCAT_SECTIONS - sectionsCovered() ===
+                    1
+                        ? ""
+                        : "s"} you haven't studied yet.
+                </div>
+            {/if}
         {:else}
             <div class="giveup">No readiness score yet</div>
             <div class="detail">
-                Needs ≥200 graded reviews <em>and</em>
-                ≥50% of topics studied. Currently {readiness.overall?.gradedReviews ??
-                    0} graded reviews · {pct(readiness.coverage)} covered.
+                Needs ≥50% of the four MCAT sections studied. Currently {sectionsCovered()}/{MCAT_SECTIONS}
+                sections · {pct(readiness.coverage)} covered.
             </div>
         {/if}
     </div>
@@ -89,6 +105,12 @@ that says when it doesn't know.
                 {/if}
             </div>
         {/each}
+        <div class="section cars">
+            <span class="label">CARS</span>
+            <span class="giveup small">
+                not yet available — coming with the CARS module
+            </span>
+        </div>
     </div>
 </section>
 
@@ -139,6 +161,11 @@ that says when it doesn't know.
         color: var(--fg-subtle);
         font-size: 0.9em;
         margin-top: 0.35em;
+
+        &.note {
+            font-style: italic;
+            font-size: 0.82em;
+        }
     }
 
     .giveup {

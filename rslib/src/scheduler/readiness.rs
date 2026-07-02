@@ -13,11 +13,14 @@
 //!   a hard item at the same retrievability contributes a lower performance
 //!   estimate. Same band
 //!   + give-up machinery as the memory score.
-//! * **Readiness** maps overall mastery onto the real MCAT scale (total
-//!   472–528, per section 118–132), and reports a range, the **% of topics
-//!   covered**, and a stricter give-up rule (no projected score until there are
-//!   enough graded reviews *and* at least half the topics have data). We do not
-//!   have longitudinal practice-test data to calibrate the mapping, so it is a
+//! * **Readiness** projects an MCAT total (472–528) as the **sum of the four
+//!   sections** (each 118–132). Studied sections are mapped from their mastery;
+//!   sections without data (including CARS, which has no flashcard topic yet)
+//!   contribute a neutral mid-section prior with the full section range, so the
+//!   total's uncertainty band honestly widens with every unstudied section. We
+//!   report the range and the **fraction of the four sections covered**, and
+//!   give up only when fewer than half the sections have data. We do not have
+//!   longitudinal practice-test data to calibrate the mapping, so it is a
 //!   deliberately simple affine map, always shown with its range and coverage.
 //!
 //! Both reuse the same FSRS retrievability call and topic classifier as the
@@ -41,8 +44,8 @@ use crate::search::SortMode;
 /// Give-up thresholds shared with the memory score (tunable via the request).
 const DEFAULT_TOPIC_MIN_REVIEWS: u32 = 20;
 const DEFAULT_DECK_MIN_REVIEWS: u32 = 100;
-/// Readiness is a stronger claim, so it needs more evidence before we show it.
-const READINESS_MIN_REVIEWS: u32 = 200;
+/// Readiness needs at least half of the four sections studied before we show a
+/// projected total.
 const READINESS_MIN_COVERAGE: f32 = 0.5;
 
 /// Band half-width constant: `k / sqrt(graded_reviews)` (matches memory score).
@@ -53,11 +56,14 @@ const BAND_K: f32 = 0.5;
 /// `1 - PERF_DIFFICULTY_WEIGHT` of its retrievability.
 const PERF_DIFFICULTY_WEIGHT: f32 = 0.4;
 
-/// MCAT scale endpoints.
-const TOTAL_MIN: f32 = 472.0;
-const TOTAL_SPAN: f32 = 56.0; // 528 - 472
+/// MCAT scale endpoints. The total (472–528) is the sum of the four sections,
+/// each scored 118–132.
+const MCAT_SECTIONS: usize = 4;
 const SECTION_MIN: f32 = 118.0;
 const SECTION_SPAN: f32 = 14.0; // 132 - 118
+const SECTION_MAX: f32 = 132.0;
+/// Neutral prior for a section with no data (mid of 118..132).
+const SECTION_MID: f32 = 125.0;
 
 /// Per-card facts needed by every score, gathered once.
 struct CardFacts {
@@ -119,10 +125,6 @@ fn performance_value(facts: &CardFacts) -> Option<f32> {
     let d = facts.difficulty.unwrap_or(5.0);
     let discount = 1.0 - PERF_DIFFICULTY_WEIGHT * ((d - 1.0) / 9.0).clamp(0.0, 1.0);
     Some(r * discount)
-}
-
-fn scale_total(v: f32) -> f32 {
-    TOTAL_MIN + v.clamp(0.0, 1.0) * TOTAL_SPAN
 }
 
 fn scale_section(v: f32) -> f32 {
@@ -232,23 +234,15 @@ impl Collection {
         req: MemoryScoreRequest,
     ) -> Result<ReadinessScoreResponse> {
         let topic_min = nonzero_or(req.topic_min_reviews, DEFAULT_TOPIC_MIN_REVIEWS);
-        let readiness_min = nonzero_or(req.deck_min_reviews, READINESS_MIN_REVIEWS);
+        let deck_min = nonzero_or(req.deck_min_reviews, DEFAULT_DECK_MIN_REVIEWS);
         let topic_tags = req.topic_tags.clone();
         let (overall, per_topic) = self.accumulate_performance(&req)?;
 
-        let topics_with_data = per_topic.iter().filter(|a| a.cards_with_value > 0).count();
-        let coverage = if topic_tags.is_empty() {
-            0.0
-        } else {
-            topics_with_data as f32 / topic_tags.len() as f32
-        };
+        // Kept for the graded-review count and overall mastery shown in the UI;
+        // it no longer gates the projected total.
+        let overall_score = overall.into_score(String::new(), deck_min);
 
-        let overall_score = overall.into_score(String::new(), readiness_min);
-        // Readiness give-up rule: enough graded reviews AND at least half the
-        // topics studied.
-        let shown = overall_score.shown && coverage >= READINESS_MIN_COVERAGE;
-
-        let topics = per_topic
+        let topics: Vec<ReadinessScore> = per_topic
             .into_iter()
             .zip(topic_tags)
             .map(|(acc, tag)| {
@@ -262,10 +256,41 @@ impl Collection {
             })
             .collect();
 
+        // A section counts as covered once it has data and clears its per-topic
+        // give-up rule. Total = sum of the four sections: covered sections use
+        // their projection; the rest (including CARS, which has no topic yet)
+        // contribute a neutral mid-section prior spanning the full section range.
+        let covered = topics
+            .iter()
+            .filter(|t| {
+                t.mastery
+                    .as_ref()
+                    .is_some_and(|m| m.shown && m.cards_with_state > 0)
+            })
+            .count()
+            .min(MCAT_SECTIONS);
+        let uncovered = (MCAT_SECTIONS - covered) as f32;
+
+        let mut estimate = uncovered * SECTION_MID;
+        let mut low = uncovered * SECTION_MIN;
+        let mut high = uncovered * SECTION_MAX;
+        for t in topics.iter().filter(|t| {
+            t.mastery
+                .as_ref()
+                .is_some_and(|m| m.shown && m.cards_with_state > 0)
+        }) {
+            estimate += t.scaled_estimate;
+            low += t.scaled_low;
+            high += t.scaled_high;
+        }
+
+        let coverage = covered as f32 / MCAT_SECTIONS as f32;
+        let shown = coverage >= READINESS_MIN_COVERAGE;
+
         Ok(ReadinessScoreResponse {
-            scaled_estimate: scale_total(overall_score.estimate),
-            scaled_low: scale_total(overall_score.range_low),
-            scaled_high: scale_total(overall_score.range_high),
+            scaled_estimate: estimate,
+            scaled_low: low,
+            scaled_high: high,
             coverage,
             shown,
             overall: Some(overall_score),
@@ -320,9 +345,9 @@ mod test {
     }
 
     /// Performance discounts by difficulty, so a hard card scores below an easy
-    /// one at the same (high) stability; readiness maps overall onto 472..528
-    /// with coverage, and its give-up rule hides the projection with too few
-    /// reviews / too little coverage.
+    /// one at the same (high) stability; readiness sums the four sections onto
+    /// 472..528, and with two of four sections studied it clears the 50%
+    /// coverage give-up rule and shows the projected total.
     #[test]
     fn performance_discounts_difficulty_and_readiness_scales_and_gives_up() {
         let mut col = Collection::new();
@@ -355,9 +380,11 @@ mod test {
         assert!(a.range_low <= a.estimate && a.estimate <= a.range_high);
 
         let readiness = col.compute_readiness_score(req()).unwrap();
-        // Both topics have data -> full coverage.
-        assert!((readiness.coverage - 1.0).abs() < 1e-6);
-        // Projected total lands on the MCAT scale.
+        // Two of the four MCAT sections have data -> 50% coverage.
+        assert!((readiness.coverage - 0.5).abs() < 1e-6);
+        // Half the sections studied clears the 50% give-up rule.
+        assert!(readiness.shown, "readiness shown at 50% coverage");
+        // Projected total (sum of four sections) lands on the MCAT scale.
         assert!(readiness.scaled_estimate >= 472.0 && readiness.scaled_estimate <= 528.0);
         assert!(readiness.scaled_low <= readiness.scaled_estimate);
         assert!(readiness.scaled_estimate <= readiness.scaled_high);
@@ -365,7 +392,5 @@ mod test {
         for t in &readiness.topics {
             assert!(t.scaled_estimate >= 118.0 && t.scaled_estimate <= 132.0);
         }
-        // Give-up: only 2 graded reviews, far below the 200 default -> hidden.
-        assert!(!readiness.shown, "readiness hidden below review threshold");
     }
 }
