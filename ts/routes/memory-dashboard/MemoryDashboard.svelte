@@ -2,120 +2,50 @@
 Copyright: Ankitects Pty Ltd and contributors
 License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
-Speedrun: the honest memory-score dashboard. Each score is a point estimate of
-FSRS predicted recall paired with an uncertainty range; when there aren't enough
-graded reviews (the give-up rule), it refuses to show a number rather than guess.
+Speedrun: the honest MCAT readiness dashboard. Shows three separate scores —
+Memory, Performance and Readiness — never one blended number. Each carries a
+range and a give-up rule so it says when it doesn't know.
 -->
 <script lang="ts">
     import type {
-        MemoryScore,
         MemoryScoreResponse,
+        ReadinessScoreResponse,
     } from "@generated/anki/scheduler_pb";
 
     import Col from "$lib/components/Col.svelte";
     import Container from "$lib/components/Container.svelte";
 
-    export let score: MemoryScoreResponse;
+    import ReadinessPanel from "./ReadinessPanel.svelte";
+    import ScoreGroup from "./ScoreGroup.svelte";
 
-    $: rows = [score.overall, ...score.topics].filter(
-        (s): s is MemoryScore => s !== undefined,
-    );
-
-    function pct(fraction: number): string {
-        return `${Math.round(fraction * 100)}%`;
-    }
-
-    function bandHalfWidth(s: MemoryScore): string {
-        return `±${Math.round(((s.rangeHigh - s.rangeLow) / 2) * 100)}%`;
-    }
-
-    function lastUpdated(secs: bigint): string {
-        const n = Number(secs);
-        return n ? new Date(n * 1000).toLocaleDateString() : "never reviewed";
-    }
-
-    function title(label: string): string {
-        // Overall score has an empty label; topics are tags like mcat::chemphys.
-        return label ? (label.split("::").pop() ?? label) : "Overall";
-    }
-
-    // A number is only trustworthy if we have both enough graded reviews
-    // (give-up rule) and at least one card with an FSRS memory state.
-    function hasEstimate(s: MemoryScore): boolean {
-        return s.shown && s.cardsWithState > 0;
-    }
-
-    // Colour the recall by strength, so weaker topics stand out at a glance.
-    function recallColor(estimate: number): string {
-        if (estimate >= 0.85) {
-            return "hsl(145, 63%, 42%)";
-        } else if (estimate >= 0.65) {
-            return "hsl(38, 92%, 50%)";
-        }
-        return "hsl(0, 72%, 51%)";
-    }
+    export let memory: MemoryScoreResponse;
+    export let performance: MemoryScoreResponse;
+    export let readiness: ReadinessScoreResponse;
 </script>
 
 <Container --gutter-block="1rem" --gutter-inline="2px" breakpoint="sm">
     <Col --col-justify="center">
         <div class="dashboard">
-            <h1>Memory</h1>
-            <p class="subtitle">
-                Predicted recall <strong>right now</strong>
-                 for each MCAT section, with an honest uncertainty range. No score is shown
-                until there are enough graded reviews to trust it.
+            <h1>MCAT Readiness</h1>
+            <p class="intro">
+                Three honest scores, each with its own uncertainty range. We never
+                blend them into one number, and we refuse to show a score until
+                there's enough of your review data to trust it.
             </p>
 
-            {#each rows as s (s.label)}
-                <div class="score" class:overall={!s.label}>
-                    <div class="header">
-                        <span class="label">{title(s.label)}</span>
-                        {#if hasEstimate(s)}
-                            <span class="estimate">
-                                {pct(s.estimate)}
-                                <span class="band">{bandHalfWidth(s)}</span>
-                            </span>
-                        {:else}
-                            <span class="giveup">Not enough data yet</span>
-                        {/if}
-                    </div>
+            <ScoreGroup
+                heading="Memory"
+                subtitle="Predicted recall right now — how well you'd remember each section's cards."
+                score={memory}
+            />
 
-                    {#if hasEstimate(s)}
-                        <!-- recall bar: filled to the estimate, with the
-                             uncertainty band shaded and a marker at the point -->
-                        <div
-                            class="bar"
-                            title="range {pct(s.rangeLow)}–{pct(s.rangeHigh)}"
-                        >
-                            <div
-                                class="fill"
-                                style:width={pct(s.estimate)}
-                                style:background={recallColor(s.estimate)}
-                            ></div>
-                            <div
-                                class="band-region"
-                                style:left={pct(s.rangeLow)}
-                                style:width={pct(s.rangeHigh - s.rangeLow)}
-                            ></div>
-                        </div>
-                        <div class="meta">
-                            range {pct(s.rangeLow)}–{pct(s.rangeHigh)} · {s.gradedReviews}
-                            graded reviews · updated {lastUpdated(s.lastReviewSecs)}
-                        </div>
-                    {:else}
-                        <div class="bar empty"></div>
-                        <div class="meta">
-                            {#if s.cardsWithState === 0 && s.gradedReviews > 0}
-                                no FSRS memory data yet ({s.cardCount} cards) — enable FSRS
-                                and keep reviewing
-                            {:else}
-                                {s.gradedReviews} graded reviews so far · {s.cardCount}
-                                cards — keep reviewing to unlock a score
-                            {/if}
-                        </div>
-                    {/if}
-                </div>
-            {/each}
+            <ScoreGroup
+                heading="Performance"
+                subtitle="Predicted accuracy on exam-style questions — recall discounted by how hard the material is."
+                score={performance}
+            />
+
+            <ReadinessPanel {readiness} />
         </div>
     </Col>
 </Container>
@@ -127,89 +57,8 @@ graded reviews (the give-up rule), it refuses to show a number rather than guess
         font-size: var(--font-size);
     }
 
-    .subtitle {
+    .intro {
         color: var(--fg-subtle);
         margin-bottom: 1.5em;
-    }
-
-    .score {
-        border: 1px solid var(--border);
-        border-radius: var(--border-radius, 5px);
-        padding: 0.75em 1em;
-        margin-bottom: 0.75em;
-
-        &.overall {
-            border-color: var(--fg-link);
-            border-width: 2px;
-        }
-    }
-
-    .header {
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        gap: 0.5em;
-    }
-
-    .label {
-        font-weight: bold;
-        text-transform: capitalize;
-    }
-
-    .estimate {
-        font-size: 1.6em;
-        line-height: 1.2;
-        font-variant-numeric: tabular-nums;
-    }
-
-    .band {
-        font-size: 0.6em;
-        color: var(--fg-subtle);
-    }
-
-    .giveup {
-        color: var(--fg-subtle);
-        font-style: italic;
-    }
-
-    .bar {
-        position: relative;
-        height: 0.6em;
-        margin: 0.5em 0 0.4em;
-        border-radius: 999px;
-        background: var(--canvas-inset, var(--border));
-        overflow: hidden;
-
-        &.empty {
-            border: 1px dashed var(--border);
-            background: transparent;
-        }
-    }
-
-    .fill {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        border-radius: 999px;
-    }
-
-    .band-region {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        background: repeating-linear-gradient(
-            45deg,
-            rgba(0, 0, 0, 0.18),
-            rgba(0, 0, 0, 0.18) 3px,
-            transparent 3px,
-            transparent 6px
-        );
-    }
-
-    .meta {
-        font-size: 0.85em;
-        color: var(--fg-subtle);
-        margin-top: 0.25em;
     }
 </style>

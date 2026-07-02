@@ -763,10 +763,12 @@ exposed_backend_list = [
     "get_optimal_retention_parameters",
     "simulate_fsrs_review",
     "simulate_fsrs_workload",
-    # Speedrun: interleaving + honest memory score
+    # Speedrun: interleaving + honest memory/performance/readiness scores
     "get_interleave_config",
     "set_interleave_config",
     "compute_memory_score",
+    "compute_performance_score",
+    "compute_readiness_score",
     # DeckConfigService
     "get_ignored_before_count",
     "get_retention_workload",

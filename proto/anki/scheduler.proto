@@ -71,6 +71,13 @@ service SchedulerService {
   // Speedrun: honest memory score (mean FSRS retrievability + uncertainty band
   // + give-up rule) for a deck/search, broken down by topic tag.
   rpc ComputeMemoryScore(MemoryScoreRequest) returns (MemoryScoreResponse);
+  // Speedrun: predicted performance on held-out, exam-style questions — FSRS
+  // retrievability discounted by item difficulty. Same shape/give-up as the
+  // memory score; distinct because recall overstates answering a reworded item.
+  rpc ComputePerformanceScore(MemoryScoreRequest) returns (MemoryScoreResponse);
+  // Speedrun: projected MCAT readiness (total 472–528, per section 118–132) with
+  // a range, exam-coverage %, and a stricter give-up rule.
+  rpc ComputeReadinessScore(MemoryScoreRequest) returns (ReadinessScoreResponse);
 }
 
 // Implicitly includes any of the above methods that are not listed in the
@@ -530,6 +537,32 @@ message MemoryScore {
 message MemoryScoreResponse {
   MemoryScore overall = 1;
   repeated MemoryScore topics = 2;
+}
+
+// Speedrun: a per-topic readiness entry — the topic's mastery (0..1, same shape
+// as a memory score) plus that mastery mapped onto the MCAT section scale.
+message ReadinessScore {
+  MemoryScore mastery = 1;
+  // Mastery mapped onto the MCAT section scale, 118..132.
+  float scaled_estimate = 2;
+  float scaled_low = 3;
+  float scaled_high = 4;
+}
+
+// Speedrun: projected MCAT readiness derived from overall/per-topic mastery.
+message ReadinessScoreResponse {
+  // Overall mastery (0..1) with band + graded-review count.
+  MemoryScore overall = 1;
+  // Overall mastery mapped onto the total MCAT scale, 472..528.
+  float scaled_estimate = 2;
+  float scaled_low = 3;
+  float scaled_high = 4;
+  // Fraction of configured topics with any data, 0..1 (the exam-coverage %).
+  float coverage = 5;
+  // Give-up rule: false (hide the projection) until there are enough graded
+  // reviews AND at least half the topics have data.
+  bool shown = 6;
+  repeated ReadinessScore topics = 7;
 }
 
 message FuzzDeltaRequest {

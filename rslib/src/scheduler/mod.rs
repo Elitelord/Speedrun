@@ -14,6 +14,7 @@ pub mod fsrs;
 pub(crate) mod memory_score;
 pub mod new;
 pub(crate) mod queue;
+pub(crate) mod readiness;
 mod reviews;
 mod service;
 pub mod states;

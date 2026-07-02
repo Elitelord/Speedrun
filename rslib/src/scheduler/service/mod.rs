@@ -413,6 +413,20 @@ impl crate::services::SchedulerService for Collection {
     ) -> Result<scheduler::MemoryScoreResponse> {
         self.compute_memory_score(input)
     }
+
+    fn compute_performance_score(
+        &mut self,
+        input: scheduler::MemoryScoreRequest,
+    ) -> Result<scheduler::MemoryScoreResponse> {
+        self.compute_performance_score(input)
+    }
+
+    fn compute_readiness_score(
+        &mut self,
+        input: scheduler::MemoryScoreRequest,
+    ) -> Result<scheduler::ReadinessScoreResponse> {
+        self.compute_readiness_score(input)
+    }
 }
 
 impl crate::services::BackendSchedulerService for Backend {

@@ -1492,8 +1492,8 @@ title="{}" {}>{}</button>""".format(
         qconnect(m.action_check_for_updates.triggered, self.on_check_for_updates)
         qconnect(m.actionPreferences.triggered, self.onPrefs)
 
-        # Speedrun: MCAT honest memory-score dashboard
-        self.action_memory_dashboard = QAction("MCAT Memory", self)
+        # Speedrun: MCAT honest readiness dashboard (memory + performance + readiness)
+        self.action_memory_dashboard = QAction("MCAT Readiness", self)
         qconnect(self.action_memory_dashboard.triggered, self.on_memory_dashboard)
         m.menuTools.addAction(self.action_memory_dashboard)
 
