@@ -19,6 +19,7 @@ import aqt.operations
 import aqt.speedrun_ai
 from anki.cards import Card, CardId
 from anki.collection import Config, OpChanges, OpChangesWithCount
+from anki.consts import MODEL_CLOZE
 from anki.lang import with_collapsed_whitespace
 from anki.scheduler.base import ScheduleCardsAsNew
 from anki.scheduler.v3 import (
@@ -159,6 +160,11 @@ class Reviewer:
         self._recordedAudio: str | None = None
         self._combining: bool = True
         self.typeCorrect: str | None = None  # web init happens before this is set
+        self.typeFont: str = ""
+        self.typeSize: int = 0
+        # Speedrun: True when the type-in box was synthesized (card has no
+        # {{type:}} field) for the free-text-by-default production loop.
+        self._synth_typein: bool = False
         self.state: Literal["question", "answer", "transition"] | None = None
         self._refresh_needed: RefreshNeeded | None = None
         self._v3: V3CardInfo | None = None
@@ -715,13 +721,62 @@ class Reviewer:
         else:
             return self.typeAnsAnswerFilter(buf)
 
+    def _typeans_input_html(self, font: str, size: int) -> str:
+        return f"""
+<center>
+<input type=text id=typeans onkeypress="_typeAnsPress();"
+   style="font-family: '{font}'; font-size: {size}px;">
+</center>
+"""
+
+    def _synth_answer_field(self) -> str | None:
+        """Best-guess answer field for a card whose notetype has no {{type:}}
+        field: prefer a field literally named "Back", else the last field. Only
+        used to power the free-text-by-default production loop."""
+        note = self.card.note()
+        note_type = self.card.note_type()
+        # Cloze notetypes have no distinct "answer" field; leave them alone.
+        if note_type["type"] == MODEL_CLOZE:
+            return None
+        flds = note_type["flds"]
+        if len(flds) < 2:
+            return None
+        names = [f["name"] for f in flds]
+        for name in names:
+            if name.lower() == "back":
+                return note[name] or None
+        return note[names[-1]] or None
+
+    def _should_synthesize_typein(self) -> bool:
+        """Whether to inject a type-in box on a card that lacks a {{type:}}
+        field, so the free-text loop works without a Change Notetype step."""
+        return bool(
+            self.mw.pm.production_mode_enabled()
+            and self.mw.pm.type_in_default_enabled()
+        )
+
+    def _question_without_type_marker(self, buf: str) -> str:
+        # Speedrun: no template {{type:}} field. When free-text-by-default is on,
+        # synthesize a type-in box against a best-guess answer field so the
+        # production loop applies to any card with a back field.
+        if self._should_synthesize_typein():
+            answer = self._synth_answer_field()
+            if answer:
+                self.typeCorrect = answer
+                self.typeFont = "Arial"
+                self.typeSize = 20
+                self._synth_typein = True
+                return buf + self._typeans_input_html(self.typeFont, self.typeSize)
+        return buf
+
     def typeAnsQuestionFilter(self, buf: str) -> str:
         self._combining = True
         self.typeCorrect = None
+        self._synth_typein = False
         clozeIdx = None
         m = re.search(self.typeAnsPat, buf)
         if not m:
-            return buf
+            return self._question_without_type_marker(buf)
         fld = m.group(1)
         # if it's a cloze, extract data
         if fld.startswith("cloze:"):
@@ -753,18 +808,24 @@ class Reviewer:
                 return re.sub(self.typeAnsPat, "", buf)
         return re.sub(
             self.typeAnsPat,
-            f"""
-<center>
-<input type=text id=typeans onkeypress="_typeAnsPress();"
-   style="font-family: '{self.typeFont}'; font-size: {self.typeSize}px;">
-</center>
-""",
+            lambda _m: self._typeans_input_html(self.typeFont, self.typeSize),
             buf,
         )
 
     def typeAnsAnswerFilter(self, buf: str) -> str:
         if not self.typeCorrect:
             return re.sub(self.typeAnsPat, "", buf)
+        if self._synth_typein:
+            # No template marker to replace; append the answer comparison so the
+            # native (AI-off) type-answer diff still renders on synthesized cards.
+            output = self.mw.col.compare_answer(
+                self.typeCorrect, self.typedAnswer or "", self._combining
+            )
+            return buf + (
+                f"<hr id=answer>\n"
+                f"<div style=\"font-family: '{self.typeFont}'; "
+                f'font-size: {self.typeSize}px">{output}</div>'
+            )
         m = re.search(self.typeAnsPat, buf)
         type_pattern = m.group(1) if m else ""
         orig = buf
