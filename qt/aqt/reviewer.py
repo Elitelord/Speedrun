@@ -896,11 +896,14 @@ class Reviewer:
     MAX_PROD_ATTEMPTS = 2
 
     def _production_mode_active(self) -> bool:
-        # Eligible only for cards with a {{type:}} field (self.typeCorrect is the
-        # expected answer), when the profile flag is on and AI is usable.
+        # Eligible when there's an expected answer, free-text grading is on, the
+        # AI master switch is on, and a key is usable. The profile flag is
+        # checked directly (source of truth) so turning AI off takes effect
+        # immediately regardless of any cached state.
         return bool(
             self.typeCorrect
             and self.mw.pm.production_mode_enabled()
+            and self.mw.pm.ai_features_enabled()
             and aqt.speedrun_ai.ai_enabled()
         )
 
@@ -908,12 +911,14 @@ class Reviewer:
     def _decide_ease(verdict: str, grader_ease: int | None, attempt: int) -> int:
         """Map an LLM grade + attempt count onto an FSRS ease (1-4). Honour an
         explicit grader ease if given, else: correct first try -> Good; correct
-        after a hint -> Hard; wrong/revealed -> Again (a revealed answer is a
-        failed recall)."""
+        after a hint -> Hard; partial -> Hard (you were close); wrong/revealed
+        -> Again."""
         if grader_ease in (1, 2, 3, 4):
             return grader_ease
         if verdict == "correct":
             return 3 if attempt <= 1 else 2
+        if verdict == "partial":
+            return 2
         return 1
 
     def _grade_attempt(self, typed: str) -> None:

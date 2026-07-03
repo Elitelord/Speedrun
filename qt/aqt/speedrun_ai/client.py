@@ -52,12 +52,14 @@ _GRADE_SYSTEM = (
     "against the provided expected answer and rubric — never introduce facts "
     "that are not supported by them. If the expected answer/rubric is empty or "
     "does not let you judge the response, abstain.\n"
-    "Judge by MEANING, not exact wording. If the student's answer conveys the "
-    "same core idea as the expected answer — even if phrased differently, "
-    'shorter, or missing a minor detail — mark it "correct". Use "partial" '
-    'only when a key part of the idea is missing or wrong, and "wrong" only '
-    "when it is essentially incorrect or unrelated. Do not penalise phrasing, "
-    'synonyms, or brevity. A near-verbatim answer is always "correct".\n'
+    "Judge by MEANING, not exact wording. Be generous: if the student's answer "
+    "names the same key terms or conveys the same core idea as the expected "
+    'answer, mark it "correct" — ignore articles (a/the), plurals, word '
+    "order, capitalisation, synonyms, brevity, and minor missing detail. A "
+    "near-verbatim answer, or one that lists the same key terms, is ALWAYS "
+    '"correct". Only use "partial" when a distinct required element is entirely '
+    'missing, and "wrong" only when the answer is essentially incorrect or '
+    "unrelated. When unsure between correct and partial, choose correct.\n"
     'Return a compact JSON object with keys: verdict (one of "correct", '
     '"partial", "wrong"), feedback (one short sentence for the student), '
     "hint (a conceptual nudge that does NOT reveal the answer; empty if "
