@@ -576,6 +576,20 @@ create table if not exists profiles
     def set_type_in_default_enabled(self, on: bool) -> None:
         self.meta["speedrun_type_in_default"] = on
 
+    # Master AI switch + the user's own OpenAI key (so a downloaded build can be
+    # used without a repo-root .env).
+    def ai_features_enabled(self) -> bool:
+        return self.meta.get("speedrun_ai_enabled", True)
+
+    def set_ai_features_enabled(self, on: bool) -> None:
+        self.meta["speedrun_ai_enabled"] = on
+
+    def openai_key(self) -> str:
+        return self.meta.get("speedrun_openai_key", "")
+
+    def set_openai_key(self, key: str) -> None:
+        self.meta["speedrun_openai_key"] = key
+
     def get_answer_key(self, ease: int) -> str | None:
         return self.meta.setdefault("answer_keys", self.default_answer_keys).get(ease)
 

@@ -22,14 +22,25 @@ __all__ = [
     "ai_enabled",
     "get_client",
     "grade",
+    "set_ai_enabled",
 ]
+
+# Master on/off switch, driven by the app's settings (per-profile). When off,
+# every AI feature degrades to its non-AI path regardless of the key.
+_ai_enabled_override: bool = True
+
+
+def set_ai_enabled(enabled: bool) -> None:
+    global _ai_enabled_override
+    _ai_enabled_override = enabled
 
 
 def ai_enabled() -> bool:
-    """True if a usable OpenAI key is configured. Feature-specific toggles
-    (e.g. the reviewer's production-mode flag) are checked separately at their
-    call sites; this is the single "is AI usable at all" gate."""
-    return get_config().has_key
+    """True if AI features are switched on AND a usable OpenAI key is configured.
+    Feature-specific toggles (e.g. the reviewer's production-mode flag) are
+    checked separately at their call sites; this is the single "is AI usable at
+    all" gate."""
+    return _ai_enabled_override and get_config().has_key
 
 
 def get_client() -> OpenAIClient | None:

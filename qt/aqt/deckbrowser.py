@@ -253,7 +253,8 @@ html, body { background:var(--sr-bg) !important; color:var(--sr-ink) !important;
     padding:0.6em 0; cursor:pointer; }
 #speedrunApp label.opt input { margin-top:0.25em; }
 #speedrunApp label.opt .desc { color:var(--sr-muted); font-size:0.86em; }
-#speedrunApp textarea, #speedrunApp input[type=text] { width:100%;
+#speedrunApp textarea, #speedrunApp input[type=text],
+#speedrunApp input[type=password] { width:100%;
     border:1px solid var(--sr-border); border-radius:8px; padding:0.5em 0.7em;
     font-family:inherit; color:var(--sr-ink); background:#fff; box-sizing:border-box; }
 #speedrunApp .btn { display:inline-block; padding:0.55em 1.4em; border:none;
@@ -286,9 +287,12 @@ html, body { background:var(--sr-bg) !important; color:var(--sr-ink) !important;
                     "topic_tags": tags,
                     "production_mode": self.mw.pm.production_mode_enabled(),
                     "type_in_default": self.mw.pm.type_in_default_enabled(),
+                    "ai_enabled": self.mw.pm.ai_features_enabled(),
                     "ai_key": ai.has_key,
+                    "openai_key": self.mw.pm.openai_key(),
                     "ai_model": ai.chat_model,
                     "ai_embed": ai.embed_model,
+                    "signed_in": bool(self.mw.pm.sync_auth()),
                 }
                 return RenderData(
                     tree=col.sched.deck_due_tree(),
@@ -481,9 +485,18 @@ html, body { background:var(--sr-bg) !important; color:var(--sr-ink) !important;
         return (
             '<div id="speedrunApp">'
             '<div class="section-head"><h1>Decks</h1>'
-            "<a onclick=\"pycmd('view:home')\">← Home</a></div>"
-            '<div class="deckgrid">' + self._deck_cards(nodes) + add_card + "</div>"
-            "</div>"
+            + self._back_button()
+            + "</div>"
+            + '<div class="deckgrid">'
+            + self._deck_cards(nodes)
+            + add_card
+            + "</div></div>"
+        )
+
+    @staticmethod
+    def _back_button() -> str:
+        return (
+            '<button class="btn ghost" onclick="pycmd(\'view:home\')">← Home</button>'
         )
 
     @staticmethod
@@ -543,7 +556,8 @@ html, body { background:var(--sr-bg) !important; color:var(--sr-ink) !important;
         return (
             '<div id="speedrunApp">'
             '<div class="section-head"><h1>Progress</h1>'
-            "<a onclick=\"pycmd('view:home')\">← Home</a></div>"
+            + self._back_button()
+            + "</div>"
             '<p class="lead">Your three honest scores, broken down by MCAT '
             "section. Projected total is the sum of the four sections.</p>"
             + self._scores_row()
@@ -569,10 +583,13 @@ html, body { background:var(--sr-bg) !important; color:var(--sr-ink) !important;
         checked = lambda b: "checked" if b else ""  # noqa: E731
         int_dis = "" if s["interleave_enabled"] else "disabled"
         prod_dis = "" if s["production_mode"] else "disabled"
+        signed = "Signed in" if s["signed_in"] else "Not signed in"
+        sync_btn = "Sync now" if s["signed_in"] else "Sign in & sync"
         return (
             '<div id="speedrunApp">'
             '<div class="section-head"><h1>Settings</h1>'
-            "<a onclick=\"pycmd('view:home')\">← Home</a></div>"
+            + self._back_button()
+            + "</div>"
             # Study
             '<div class="panel"><h2>Study</h2>'
             f'<label class="opt"><input type="checkbox" id="sr_int" {checked(s["interleave_enabled"])} '
@@ -595,9 +612,26 @@ html, body { background:var(--sr-bg) !important; color:var(--sr-ink) !important;
             "— no Change Notetype needed.</div></span></label></div>"
             # AI
             '<div class="panel"><h2>AI</h2>'
-            f'<div class="sec-row"><span class="k">API key</span>{key_badge}</div>'
+            f'<label class="opt"><input type="checkbox" id="sr_ai" {checked(s["ai_enabled"])}>'
+            '<span><b>Enable AI</b><div class="desc">Turn off to disable all AI '
+            "features (free-text grading falls back to self-grading).</div></span></label>"
+            '<label class="opt" style="display:block"><b>OpenAI API key</b>'
+            '<div class="desc">Stored on this device only. Get one at '
+            "platform.openai.com. Leave blank to use a key from the environment."
+            "</div>"
+            f'<input type="password" id="sr_key" placeholder="sk-…" '
+            f'value="{html.escape(s["openai_key"])}"></label>'
+            f'<div class="sec-row"><span class="k">Key status</span>{key_badge}</div>'
             f'<div class="sec-row"><span class="k">Chat model</span><span>{html.escape(s["ai_model"])}</span></div>'
             f'<div class="sec-row"><span class="k">Embedding model</span><span>{html.escape(s["ai_embed"])}</span></div>'
+            "</div>"
+            # Sync
+            '<div class="panel"><h2>Sync</h2>'
+            f'<div class="sec-row"><span class="k">AnkiWeb</span><span>{signed}</span></div>'
+            '<div class="desc" style="margin:0.4em 0 0.8em">Sync keeps this device '
+            "in step with AnkiWeb (or your self-hosted server). Sign-in opens a "
+            "small dialog.</div>"
+            f'<button class="btn ghost" onclick="pycmd(\'advanced:sync\')">{sync_btn}</button>'
             "</div>"
             # Advanced
             '<div class="panel"><h2>Advanced</h2>'
@@ -616,6 +650,8 @@ html, body { background:var(--sr-bg) !important; color:var(--sr-ink) !important;
             "weight_by_weakness:document.getElementById('sr_weak').checked,"
             "production_mode:document.getElementById('sr_prod').checked,"
             "type_in_default:document.getElementById('sr_typein').checked,"
+            "ai_enabled:document.getElementById('sr_ai').checked,"
+            "openai_key:document.getElementById('sr_key').value,"
             "topic_tags:document.getElementById('sr_tags').value}));}</script>"
             "</div>"
         )
@@ -629,6 +665,9 @@ html, body { background:var(--sr-bg) !important; color:var(--sr-ink) !important;
             return
         self.mw.pm.set_production_mode_enabled(bool(data.get("production_mode")))
         self.mw.pm.set_type_in_default_enabled(bool(data.get("type_in_default")))
+        self.mw.pm.set_ai_features_enabled(bool(data.get("ai_enabled")))
+        self.mw.pm.set_openai_key(str(data.get("openai_key", "")).strip())
+        self.mw.apply_ai_prefs()
         tags = [
             t.strip() for t in str(data.get("topic_tags", "")).split("\n") if t.strip()
         ]
@@ -652,6 +691,7 @@ html, body { background:var(--sr-bg) !important; color:var(--sr-ink) !important;
             "checkdb": self.mw.onCheckDB,
             "emptycards": self.mw.onEmptyCards,
             "stats": self._open_stats,
+            "sync": self.mw.on_sync_button_clicked,
         }
         handler = handlers.get(action)
         if handler:

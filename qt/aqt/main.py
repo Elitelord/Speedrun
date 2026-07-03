@@ -500,6 +500,8 @@ class AnkiQt(QMainWindow):
         if not self.loadCollection():
             return
 
+        # Speedrun: apply the profile's AI settings (master toggle + user key).
+        self.apply_ai_prefs()
         self.setup_sound()
         self.flags = FlagManager(self)
         # show main window
@@ -1107,6 +1109,16 @@ title="{}" {}>{}</button>""".format(
 
     def on_speedrun_settings(self) -> None:
         self.show_deck_view("settings")
+
+    def apply_ai_prefs(self) -> None:
+        """Push the per-profile AI settings (master toggle + user key) into the
+        dependency-free speedrun_ai layer. Called on profile load and after the
+        settings page saves."""
+        import aqt.speedrun_ai
+        from aqt.speedrun_ai.config import set_api_key_override
+
+        set_api_key_override(self.pm.openai_key())
+        aqt.speedrun_ai.set_ai_enabled(self.pm.ai_features_enabled())
 
     def closeAllWindows(self, onsuccess: Callable) -> None:
         aqt.dialogs.closeAll(onsuccess)

@@ -84,11 +84,28 @@ class AiConfig:
         return bool(self.api_key)
 
 
+# A key set by the user in the app's settings (persisted per-profile). Takes
+# precedence over the .env/environment so a downloaded build works without a
+# repo-root .env. Set via :func:`set_api_key_override`.
+_api_key_override: str = ""
+
+
+def set_api_key_override(key: str) -> None:
+    global _api_key_override
+    _api_key_override = (key or "").strip()
+
+
 def get_config() -> AiConfig:
     env = _env()
-    # Accept the common ``OPEN_AI_API_KEY`` misspelling as an alias so a
-    # mistyped var name doesn't silently fall back to self-grading.
-    api_key = (env.get("OPENAI_API_KEY") or env.get("OPEN_AI_API_KEY") or "").strip()
+    # Precedence: user-entered key (settings) > OPENAI_API_KEY > the common
+    # OPEN_AI_API_KEY misspelling. This keeps a mistyped env var from silently
+    # falling back to self-grading, and lets a shipped build use an in-app key.
+    api_key = (
+        _api_key_override
+        or env.get("OPENAI_API_KEY")
+        or env.get("OPEN_AI_API_KEY")
+        or ""
+    ).strip()
     return AiConfig(
         api_key=api_key,
         chat_model=env.get("OPENAI_MODEL", DEFAULT_CHAT_MODEL).strip()
