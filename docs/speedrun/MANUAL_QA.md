@@ -1,52 +1,140 @@
-# Speedrun MVP — Manual QA & Your To-Do List
+# Speedrun — Manual QA & Your To-Do List
 
-> Running list of things **you** should do/verify manually (I can't, or shouldn't
-> do them for you). I keep this updated as work lands. Check items off as you go.
-> Grouped by type. ⭐ = needed for the Wednesday MVP submission.
-
-## A. Proof recordings (Wednesday deliverables) ⭐
-
-> **See [`DEMO_VIDEO.md`](./DEMO_VIDEO.md)** for the full combined demo+proof
-> recording script (proofs are captured inside the single demo video) and the
-> automated-verification results already captured (Rust tests exit 0; pylib 123
-> passed; interleaving + seed-deck tests pass).
-
-- [ ] **Clean-build + tests + commit hash**: `just check` succeeding, hash visible. Verified green at `401f76dad` except the `_rsbridge.pyd` copy, which needs Anki **closed** first (OS file lock, not a code error). See DEMO_VIDEO Scene B.
-- [ ] **Android review-session recording** on the emulator/device: open the MCAT deck → toggle interleave → answer a few cards. See DEMO_VIDEO Scene F.
-- [ ] **Clean-machine desktop installer recording**: install `out/installer/dist/anki-26.05-win-x64.msi` (193 MB) on a fresh Windows VM/machine and record it launching. See DEMO_VIDEO Scene D. (macOS installer would need `git submodule update --init qt/installer/mac-template` + a Mac/CI build.)
-
-## B. Git / publishing ⭐
-
-- [x] **Commit + push our `anki` fork change** — `main` @ `401f76dad` pushed to `Elitelord/Speedrun` (includes Phase 7 weakness-weighting).
-- [x] **Commit + push the Android backend repo** — `Speedrun-Android-Backend` `main` @ `7b03d23` pushed; `.gitmodules` → `Elitelord/Speedrun.git`, `anki` submodule pinned at `e6a435d7a` (reproducible). _Note: pin predates Phase 7, so Android runs uniform interleaving; bump the submodule + rebuild the `.aar` if you want weakness-weighting on-device._
-- [ ] **Push `Speedrun-Android`** app changes (`local_backend`, `BackendDependencies.kt`, `Deck.kt`, `build.gradle`, DeckPicker toggle) if not already.
-- [ ] **README**: state **Exam: MCAT** up top, AGPL-3.0-or-later + credit to Anki, and build instructions for BOTH apps + architecture overview + the Rust-change note (`docs/speedrun/rust-change.md`).
-
-## C. Content QA — medical accuracy (great fit for you as pre-med)
-
-- [ ] **Review the seeded MCAT cards** for factual accuracy once drafted (Phase 5). Draft is auto-generated from CC BY 4.0 OpenStax + CC BY-SA Wikipedia — verify the science is right and the phrasing is exam-appropriate before shipping.
-- [ ] Confirm the per-section tagging (`mcat::biobiochem` / `mcat::chemphys` / `mcat::psychsoc`) matches the cards' actual content.
-
-## D. Feature QA — behavior verification
-
-- [ ] **Import the seed deck**: `just run` → File → Import → `docs/speedrun/seed-deck/MCAT.apkg` (72 cards, "MCAT" deck; ships with a high new-cards/day limit so all 3 topics gather).
-- [x] **Interleaving on desktop**: confirmed working by user (topics alternate; toggle off groups by topic).
-- [ ] **Weakness-weighting toggle (Phase 7)**: **Tools → "Weight interleaving by weakness"** (enabled only while interleaving is on) → after some reviews, confirm the weaker topic (lower dashboard estimate) surfaces more often.
-- [x] **Memory dashboard route fix**: **Tools → "MCAT Memory"** opens (the earlier "Invalid path" is fixed).
-- [x] **Interleaving on Android**: confirmed working by user on the emulator (topics alternate via the DeckPicker overflow toggle).
-- [ ] **Memory score (Phase 4 dashboard)**: `just run` → **Tools → "MCAT Memory"**. With no MCAT deck/reviews yet, every topic should show the **"Not enough data yet"** give-up state (this is correct honest behavior). After importing + reviewing the seed deck, confirm the estimate + range + "updated" render sensibly.
-- [ ] **FSRS/undo sanity**: eyeball that enabling interleaving doesn't change due dates/intervals and that undo works mid-session (automated tests cover this, but a manual look is good).
-
-## E. Environment / packaging
-
-- [ ] **(Optional) arm64 Android build** if you want to run on a physical phone (I built x86_64 for the emulator; needs an `ALL_ARCHS` backend build).
-- [ ] **Briefcase installer template** (Phase 6): the desktop installer test fails because Briefcase can't clone `qt/installer/windows-template` at branch `v0.4.2` — may need a network/git-config fix on your machine; I'll investigate too.
-
-## F. Decisions for you (when convenient)
-
-- [ ] Confirm the **seed-deck approach**: self-author ~90–120 original cards from CC BY 4.0 sources (recommended, license-clean) vs. any deck you'd prefer.
-- [ ] Confirm the **give-up thresholds** (draft: 20 graded reviews/topic, 100/deck) once you see real review volumes.
+> Everything **you** need to do/verify before the Friday and Sunday gates.
+> Requirements are sourced from the assignment brief
+> (`Speedrun_ A Desktop + Mobile Study App Built on Anki.md`, distilled in
+> [`POST_MVP_ROADMAP.md`](../../POST_MVP_ROADMAP.md)) — not just the handoff.
+> `[x]` = done, `[ ]` = pending. ⭐ = graded deliverable. Brief refs like §7f
+> point at the assignment's numbered requirements.
 
 ---
 
-_Done items move to the bottom / get checked. Ping me to add anything._
+## 0. In progress right now — UI polish
+
+- [ ] **Review the redesigned desktop UI** (sidebar app-shell, light theme,
+  in-window Home/Progress/Settings, deck cards, free-text grading, auto-save
+  settings, in-app API key + AI on/off). Give me the next round of fixes.
+- Deferred UI (not started — decide if wanted): in-window **Browser** (still a
+  popup), full drag/drop **deck-tree** reorg, remove orphaned Svelte-settings /
+  dialog shells.
+
+---
+
+## 1. Friday gate — AI added & checked; phone syncs
+
+### Code shipped (verify in the app)
+- [x] AI subsystem (`qt/aqt/speedrun_ai/`): grounded generation, RAG retrieval,
+  BM25 baseline, eval harness (Recall@k/MRR + 2×2 confusion matrix), OpenAI
+  client with AI-off funnel. `openai`/`numpy`/`rank_bm25` installed in `out/pyenv`.
+- [x] Free-text production loop (type → LLM grade → hint → reveal), grades by
+  meaning, stays on feedback, degrades to self-graded flip when AI is off.
+- [x] Three honest scores — Memory / Performance / Readiness — each with range +
+  give-up rule; Readiness = sum of the 4 MCAT sections on 472–528.
+- [x] In-app **OpenAI key** field + **Enable AI** master toggle (per-profile;
+  works in a downloaded build with no repo `.env`).
+
+### Your actions
+- [ ] ⭐ **Real AI pipeline run** (needs your key — costs API calls). Produces the
+  brief's proof artifacts: `docs/speedrun/ai/eval-report.md` with
+  **beat-a-baseline** (RAG vs BM25) and the **pre-registered cutoff** gate (§7f).
+  _(You wanted an agent to generate harder cards — that's this step; see §4.)_
+- [ ] Add real **MCAT source text** (CC-BY OpenStax) to `docs/speedrun/ai/source/`
+  so retrieval/grounding is over real content, and every card **traces to a named
+  source**.
+- [ ] ⭐ **AI-off invariant**: confirm the app still gives a score and reviews work
+  with **Enable AI** off (Settings) and with the network down.
+- [ ] ⭐ **Two-way sync desktop ↔ Android**: offline review on each → reconnect →
+  reconcile with **no lost or double-counted reviews** (`docs/speedrun/SYNC.md`).
+- [ ] **Phone shows the three scores** with ranges + give-up rule (verify on
+  Android; the scores UI there may still need building — flag me if missing).
+
+---
+
+## 2. Sunday gate — prove it & ship both
+
+### Models & evidence ⭐
+- [ ] **Memory calibration**: calibration chart + **Brier/log-loss** on held-out
+  reviews (when it says 80%, recall ≈ 80%).
+- [ ] **Performance accuracy** on held-out exam-style questions, **plus the
+  paraphrase test (§7d)**: 30 cards × 2 reworded questions each; report the gap
+  between card recall and reworded-question accuracy.
+- [ ] **Score-mapping write-up** with a range, honest about no longitudinal
+  practice-test data (§9).
+- [ ] **Study-feature ablation** (§interleaving): 3 builds at equal study time —
+  (1) interleaving on, (2) interleaving off, (3) plain unmodified Anki. **State
+  the metric ahead of time**, report a **range** and any results that didn't work.
+- [ ] **Leakage check (§7e)**: script that flags any test item / near-copy in
+  training data; show it's clean.
+- [ ] **AI card check (§7f)**: 50-pair gold set → generate 50 cards from one
+  source → report correct-and-useful / wrong / correct-but-bad-teaching as a
+  **2×2 confusion matrix** vs a pre-set cutoff (watch the false-negative cell).
+- [ ] **Model descriptions**: one page each for memory / performance / readiness,
+  including the give-up rule.
+
+### Reliability & performance (§10)
+- [ ] **One-command benchmark (§7h)** on a 50,000-card deck printing p50/p95/worst
+  per action; hit targets: button-ack p95 <50 ms, next-card p95 <100 ms, dashboard
+  first load p95 <1 s / refresh <500 ms, sync <5 s, cold start <5 s desktop /
+  <4 s phone, no UI freeze >100 ms.
+- [ ] **Crash test**: kill mid-review ×20 each platform → **zero corrupted
+  collections**.
+- [ ] **Coverage map (§7c)**: every official MCAT outline topic marked covered/not,
+  with **% covered** on the dashboard; abstain below the line.
+- [ ] **Sync conflict handling (§7b)**: same card reviewed on both devices offline
+  → documented, correct conflict-rule winner.
+
+### Ship both ⭐
+- [ ] **Rebuild release artifacts with the NEW UI + fixes**: Windows `.msi`
+  (`tools/build-installer.bat`, then clear the Briefcase stamps — see
+  speedrun-mvp memory) + Android `.apk`; publish/refresh the GitHub Release.
+- [ ] ⭐ **Clean-machine installs**: desktop `.msi` and Android `.apk` install/run
+  on **fresh devices** (record for the demo).
+- [ ] ⭐ **AI-off on both apps**: each still gives a score with AI disabled.
+
+### Hand-in (Sunday 10:59 PM CT) ⭐
+- [ ] **Demo video (3–5 min)**: review session, the Rust interleaving change in
+  action, phone→desktop sync, three scores with ranges, AI features, test results
+  (see [`DEMO_VIDEO.md`](./DEMO_VIDEO.md)).
+- [ ] **Brainlift** (`Speedrun_Brainlift_MCAT.md`) finalized/exported.
+- [ ] **Repo hand-in**: public AGPL-3.0 fork with Anki credit, **exam (MCAT)
+  stated up top**, build instructions for both apps, architecture overview,
+  Rust-change note (`docs/speedrun/rust-change.md`), and a touched-files list.
+
+---
+
+## 3. Content QA — medical accuracy (your pre-med call)
+- [ ] **Review the 72 seed cards** for factual accuracy and exam-appropriate
+  phrasing (drafted from CC-BY OpenStax + CC-BY-SA Wikipedia).
+- [ ] Confirm per-section tags (`mcat::biobiochem|chemphys|psychsoc`) match each
+  card's content.
+
+## 4. Harder cards (your next planned step — agent-generated)
+- [ ] Run the AI card-generation agent to produce **MCAT-difficulty** cards
+  (amino-acid pKa/charge at pH, enzyme kinetics Km/Vmax, glycolysis intermediates,
+  action-potential ion mechanics, thermo/circuits with calculation — POST_MVP §"Seed
+  deck depth") and **replace the too-easy existing cards**, validating generated
+  cards against a human gold set (§7f) before shipping. Regenerate `MCAT.apkg`.
+
+## 5. Done / pushed
+- [x] Engine fork `main` pushed to `Elitelord/Speedrun` (user confirmed all
+  changes pushed).
+- [x] `Speedrun-Android` + `Speedrun-Android-Backend` pushed (user confirmed).
+  _If you want on-device weakness-weighting, bump the backend's `anki` submodule
+  past Phase 7 and rebuild the `.aar`._
+- [x] Interleaving (uniform + weakness-weighted) Rust change, desktop + Android.
+- [x] Memory/Performance/Readiness scores + in-window Progress page.
+- [x] Free-text grading loop + AI subsystem code + eval harness.
+- [x] Seed deck `MCAT.apkg` (72 cards, type-in notetype).
+- [x] Desktop MSI built once (needs a rebuild with the new UI — see §2 Ship both).
+- [x] Desktop UI overhaul (app-shell, light theme, in-window pages, auto-save
+  settings, in-app key + AI toggle).
+
+## 6. Decisions for you (when convenient)
+- [ ] Confirm the **give-up thresholds** (20 graded/topic, 100/deck) once you see
+  real review volumes.
+- [ ] CARS module vs. another feature vs. submission-prep for remaining time.
+- [ ] Keep the **Cards** browser as a popup, or invest in the in-window rebuild.
+
+---
+
+_I keep this updated as work lands. Ping me to add/adjust anything._
