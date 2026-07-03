@@ -240,6 +240,12 @@ html, body { background:var(--sr-bg) !important; color:var(--sr-ink) !important;
     align-items:center; padding:0.55em 0; border-bottom:1px solid var(--sr-border); }
 #speedrunApp .sec-row:last-child { border-bottom:none; }
 #speedrunApp .sec-row .k { font-weight:600; }
+#speedrunApp .sec-bar-row { padding:0.6em 0; border-bottom:1px solid var(--sr-border); }
+#speedrunApp .sec-bar-row:last-child { border-bottom:none; }
+#speedrunApp .sec-bar-row .sec-top { display:flex; justify-content:space-between;
+    align-items:baseline; margin-bottom:0.35em; }
+#speedrunApp .sec-bar-row .k { font-weight:600; }
+#speedrunApp .sec-bar-row .muted { color:var(--sr-muted); font-weight:normal; }
 #speedrunApp .badge { padding:0.12em 0.7em; border-radius:999px;
     font-size:0.85em; background:#dc2626; color:#fff; }
 #speedrunApp .badge.ok { background:#16a34a; }
@@ -484,18 +490,29 @@ html, body { background:var(--sr-bg) !important; color:var(--sr-ink) !important;
     def _topic_label(label: str) -> str:
         return (label.split("::")[-1] if label else "").title()
 
+    def _section_bar_row(self, label: str, pct: int | None, value_html: str) -> str:
+        """A per-section row: label + value on top, a progress bar below.
+        ``pct`` None renders the row without a filled bar (no data yet)."""
+        bar = self._bar(pct) if pct is not None else self._bar(0)
+        return (
+            '<div class="sec-bar-row">'
+            f'<div class="sec-top"><span class="k">{label}</span>'
+            f"<span>{value_html}</span></div>"
+            f"{bar}</div>"
+        )
+
     def _pct_rows(self, response: Any) -> str:
-        """Per-topic percentage rows for a memory/performance response."""
+        """Per-topic bar rows for a memory/performance response."""
         rows = ""
         for topic in response.topics:
+            label = self._topic_label(topic.label)
             if topic.shown and topic.cards_with_state > 0:
-                val = f"{self._pct(topic.estimate)}%"
+                pct = self._pct(topic.estimate)
+                rows += self._section_bar_row(label, pct, f"{pct}%")
             else:
-                val = '<span style="color:var(--sr-muted)">not enough data</span>'
-            rows += (
-                f'<div class="sec-row"><span class="k">{self._topic_label(topic.label)}</span>'
-                f"<span>{val}</span></div>"
-            )
+                rows += self._section_bar_row(
+                    label, None, '<span class="muted">not enough data</span>'
+                )
         return rows or '<div class="sec-row"><span>No topics configured.</span></div>'
 
     def _readiness_rows(self) -> str:
@@ -504,17 +521,20 @@ html, body { background:var(--sr-bg) !important; color:var(--sr-ink) !important;
             mastery = topic.mastery
             label = self._topic_label(mastery.label if mastery else "")
             if mastery and mastery.shown and mastery.cards_with_state > 0:
+                # Per-section MCAT scale is 118–132.
+                pct = self._pct((topic.scaled_estimate - 118) / 14)
                 val = (
                     f"{round(topic.scaled_estimate)} "
-                    f'<span style="color:var(--sr-muted)">'
+                    f'<span class="muted">'
                     f"({round(topic.scaled_low)}–{round(topic.scaled_high)})</span>"
                 )
+                rows += self._section_bar_row(label, pct, val)
             else:
-                val = '<span style="color:var(--sr-muted)">not enough data</span>'
-            rows += f'<div class="sec-row"><span class="k">{label}</span><span>{val}</span></div>'
-        rows += (
-            '<div class="sec-row"><span class="k">CARS</span>'
-            '<span style="color:var(--sr-muted)">coming with the CARS module</span></div>'
+                rows += self._section_bar_row(
+                    label, None, '<span class="muted">not enough data</span>'
+                )
+        rows += self._section_bar_row(
+            "CARS", None, '<span class="muted">coming with the CARS module</span>'
         )
         return rows
 
