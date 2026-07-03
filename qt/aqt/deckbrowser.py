@@ -26,7 +26,7 @@ from aqt.operations.deck import (
 from aqt.qt import *
 from aqt.sound import av_player
 from aqt.toolbar import BottomBar
-from aqt.utils import getOnlyText, openLink, shortcut, showInfo, tooltip, tr
+from aqt.utils import getOnlyText, openLink, shortcut, showInfo, tr
 
 
 class DeckBrowserBottomBar:
@@ -590,36 +590,41 @@ html, body { background:var(--sr-bg) !important; color:var(--sr-ink) !important;
             '<div class="section-head"><h1>Settings</h1>'
             + self._back_button()
             + "</div>"
+            '<p class="lead">Changes save automatically. '
+            '<span id="srStatus" class="saved"></span></p>'
             # Study
             '<div class="panel"><h2>Study</h2>'
             f'<label class="opt"><input type="checkbox" id="sr_int" {checked(s["interleave_enabled"])} '
-            "onchange=\"document.getElementById('sr_weak').disabled=!this.checked\">"
+            'onchange="srChanged()">'
             '<span><b>Interleave topics</b><div class="desc">Round-robin cards across your '
             "MCAT topics instead of one at a time.</div></span></label>"
-            f'<label class="opt"><input type="checkbox" id="sr_weak" {checked(s["weight_by_weakness"])} {int_dis}>'
+            f'<label class="opt"><input type="checkbox" id="sr_weak" {checked(s["weight_by_weakness"])} {int_dis} '
+            'onchange="srChanged()">'
             '<span><b>Weight by weakness</b><div class="desc">Show weaker topics more often.</div></span></label>'
             '<label class="opt" style="display:block"><b>Topic tags</b>'
             '<div class="desc">One tag per line.</div>'
-            f'<textarea id="sr_tags" rows="3">{html.escape(tags)}</textarea></label></div>'
+            f'<textarea id="sr_tags" rows="3" oninput="srSaveSoon()">{html.escape(tags)}</textarea></label></div>'
             # Review
             '<div class="panel"><h2>Review</h2>'
             f'<label class="opt"><input type="checkbox" id="sr_prod" {checked(s["production_mode"])} '
-            "onchange=\"document.getElementById('sr_typein').disabled=!this.checked\">"
+            'onchange="srChanged()">'
             '<span><b>Free-text grading</b><div class="desc">Type your answer and have it graded '
             "instead of flipping a flashcard.</div></span></label>"
-            f'<label class="opt"><input type="checkbox" id="sr_typein" {checked(s["type_in_default"])} {prod_dis}>'
+            f'<label class="opt"><input type="checkbox" id="sr_typein" {checked(s["type_in_default"])} {prod_dis} '
+            'onchange="srChanged()">'
             '<span><b>Apply to every card</b><div class="desc">Works on any card with a back field '
             "— no Change Notetype needed.</div></span></label></div>"
             # AI
             '<div class="panel"><h2>AI</h2>'
-            f'<label class="opt"><input type="checkbox" id="sr_ai" {checked(s["ai_enabled"])}>'
+            f'<label class="opt"><input type="checkbox" id="sr_ai" {checked(s["ai_enabled"])} '
+            'onchange="srChanged()">'
             '<span><b>Enable AI</b><div class="desc">Turn off to disable all AI '
             "features (free-text grading falls back to self-grading).</div></span></label>"
             '<label class="opt" style="display:block"><b>OpenAI API key</b>'
             '<div class="desc">Stored on this device only. Get one at '
             "platform.openai.com. Leave blank to use a key from the environment."
             "</div>"
-            f'<input type="password" id="sr_key" placeholder="sk-…" '
+            f'<input type="password" id="sr_key" placeholder="sk-…" oninput="srSaveSoon()" '
             f'value="{html.escape(s["openai_key"])}"></label>'
             f'<div class="sec-row"><span class="k">Key status</span>{key_badge}</div>'
             f'<div class="sec-row"><span class="k">Chat model</span><span>{html.escape(s["ai_model"])}</span></div>'
@@ -643,16 +648,28 @@ html, body { background:var(--sr-bg) !important; color:var(--sr-ink) !important;
             '<button class="btn ghost" onclick="pycmd(\'advanced:checkdb\')">Check Database</button>'
             '<button class="btn ghost" onclick="pycmd(\'advanced:emptycards\')">Empty Cards</button>'
             "</div></div>"
-            # Save
-            '<button class="btn" onclick="srSave()">Save</button>'
-            "<script>function srSave(){pycmd('savesettings:'+JSON.stringify({"
+            # Auto-save: every control persists on change (text inputs are
+            # debounced). No re-render, so focus/caret is preserved while typing.
+            "<script>"
+            "function srCollect(){return {"
             "interleave_enabled:document.getElementById('sr_int').checked,"
             "weight_by_weakness:document.getElementById('sr_weak').checked,"
             "production_mode:document.getElementById('sr_prod').checked,"
             "type_in_default:document.getElementById('sr_typein').checked,"
             "ai_enabled:document.getElementById('sr_ai').checked,"
             "openai_key:document.getElementById('sr_key').value,"
-            "topic_tags:document.getElementById('sr_tags').value}));}</script>"
+            "topic_tags:document.getElementById('sr_tags').value};}"
+            "function srSave(){pycmd('savesettings:'+JSON.stringify(srCollect()));"
+            "var s=document.getElementById('srStatus');if(s){s.textContent='Saved ✓';"
+            "clearTimeout(window._srT);window._srT=setTimeout(function(){"
+            "s.textContent='';},1500);}}"
+            "var _srDeb;function srSaveSoon(){clearTimeout(_srDeb);"
+            "_srDeb=setTimeout(srSave,600);}"
+            "function srChanged(){"
+            "document.getElementById('sr_weak').disabled=!document.getElementById('sr_int').checked;"
+            "document.getElementById('sr_typein').disabled=!document.getElementById('sr_prod').checked;"
+            "srSave();}"
+            "</script>"
             "</div>"
         )
 
@@ -676,8 +693,10 @@ html, body { background:var(--sr-bg) !important; color:var(--sr-ink) !important;
             topic_tags=tags or _DEFAULT_MCAT_TAGS,
             weight_by_weakness=bool(data.get("weight_by_weakness")),
         )
-        tooltip("Settings saved", parent=self.mw)
-        self.mw.reset()
+        # Persist silently: do NOT re-render here — auto-save fires on every
+        # change and a re-render would drop focus/caret while typing. The
+        # interleave change applies on the next queue build; the pm flags + AI
+        # key take effect immediately.
 
     def _open_stats(self) -> None:
         aqt.dialogs.open("NewDeckStats", self.mw)
