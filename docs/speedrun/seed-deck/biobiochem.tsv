@@ -1,24 +1,33 @@
-What monomers link together to form proteins?	Amino acids, joined by peptide bonds.
-How many amino acids are commonly used to build proteins in humans?	Twenty standard amino acids.
-What functional groups are present on every standard amino acid?	An amino group and a carboxyl group, both attached to the central (alpha) carbon.
-What type of bond joins two amino acids in a protein?	A peptide bond, formed by a dehydration (condensation) reaction.
-What is the primary structure of a protein?	The linear sequence of amino acids in the polypeptide chain.
-What are the two most common types of protein secondary structure?	The alpha helix and the beta pleated sheet.
-What mainly stabilizes protein secondary structure?	Hydrogen bonds between backbone atoms.
-What is denaturation of a protein?	The loss of a protein's three-dimensional shape, which typically disrupts its function.
-What is an enzyme?	A biological catalyst, usually a protein, that speeds up a chemical reaction without being consumed.
-How does an enzyme speed up a reaction?	By lowering the activation energy required for the reaction.
-What is the substrate of an enzyme?	The reactant molecule that an enzyme acts upon.
-What is the region of an enzyme where the substrate binds?	The active site.
-What are the monomers that make up carbohydrates?	Monosaccharides (simple sugars).
-What monosaccharide is the primary energy source for most cells?	Glucose.
-What is the storage form of glucose in animals?	Glycogen.
-What are the building blocks (monomers) of nucleic acids?	Nucleotides.
-What three parts make up a nucleotide?	A sugar, a phosphate group, and a nitrogenous base.
-Which nitrogenous bases pair together in DNA?	Adenine pairs with thymine, and guanine pairs with cytosine.
-What sugar is found in DNA?	Deoxyribose.
-What are lipids characterized by chemically?	They are largely nonpolar and hydrophobic, so they do not dissolve well in water.
-What molecule is the main energy currency of the cell?	Adenosine triphosphate (ATP).
-What is released when ATP is hydrolyzed to ADP?	Energy and an inorganic phosphate group.
-What is the fluid portion of blood called?	Plasma.
-What protein in red blood cells carries oxygen?	Hemoglobin.
+At physiological pH, what form does a free amino acid take and what is its net charge?	A zwitterion with a protonated amino group (NH3+) and deprotonated carboxyl group (COO-); net charge zero.	aminoacids-proteins
+For an amino acid with a nonionizable side chain, how do you calculate the isoelectric point (pI)?	pI = one-half (pKa1 + pKa2), the average of the two backbone pKa values.	aminoacids-proteins
+If the solution pH is below an amino acid's pI, what is its net charge?	Net positive.	aminoacids-proteins
+Why is histidine (side-chain pKa near 6.0) especially useful in enzyme acid-base catalysis?	Near physiological pH it exists in both charged and uncharged forms, so it can donate or accept a proton.	aminoacids-proteins
+What type of reaction forms a peptide bond between two amino acids?	A condensation (dehydration) reaction that releases water.	aminoacids-proteins
+Which interactions stabilize the secondary structure (alpha helix, beta sheet) of a protein?	Backbone hydrogen bonds.	aminoacids-proteins
+Which types of interactions stabilize tertiary structure?	Side-chain hydrophobic contacts, hydrogen bonds, ionic/salt bridges, and disulfide bonds.	aminoacids-proteins
+At its isoelectric point, what are an amino acid's electrophoretic mobility and solubility?	Zero electrophoretic mobility and minimum solubility.	aminoacids-proteins
+Which two amino acids carry a negatively charged (acidic) side chain at physiological pH?	Aspartate and glutamate.	aminoacids-proteins
+In which direction is a polypeptide chain conventionally read?	From the N-terminus to the C-terminus.	aminoacids-proteins
+What does the Michaelis constant KM represent physically?	The substrate concentration at half-maximal velocity (v0 = Vmax/2).	enzyme-kinetics
+In competitive inhibition, how do apparent KM and Vmax change, and why?	Apparent KM increases; Vmax is unchanged, because high substrate can outcompete the inhibitor.	enzyme-kinetics
+In noncompetitive inhibition, how do KM and Vmax change?	KM is unchanged; Vmax decreases.	enzyme-kinetics
+In uncompetitive inhibition, how do KM and Vmax change?	Both KM and Vmax decrease.	enzyme-kinetics
+What does kcat (the turnover number) measure?	The maximum number of reactions each active site catalyzes per second.	enzyme-kinetics
+Which kinetic ratio measures an enzyme's catalytic efficiency, and what value marks the diffusion limit?	kcat/KM; diffusion-limited enzymes reach about 10^8 to 10^10 per molar per second.	enzyme-kinetics
+Under what condition does KM approximate the dissociation constant KD of the ES complex?	When the catalytic step is slow relative to ES dissociation.	enzyme-kinetics
+A low KM indicates what about an enzyme's substrate affinity?	High apparent affinity (half-max velocity reached at low substrate concentration).	enzyme-kinetics
+On a Lineweaver-Burk plot, which intercept does competitive inhibition change?	The x-intercept.	enzyme-kinetics
+Do enzymes change the equilibrium position of a reaction?	No; they speed the reaction but leave the equilibrium position unchanged.	enzyme-kinetics
+What is the net ATP and NADH yield per glucose from glycolysis?	2 ATP and 2 NADH.	glycolysis
+Which glycolytic enzyme catalyzes the committed step and how is it regulated?	Phosphofructokinase-1 (PFK-1); allosterically activated by AMP and inhibited by ATP and citrate.	glycolysis
+How is hexokinase regulated in glycolysis?	It is inhibited by its product, glucose-6-phosphate (feedback inhibition).	glycolysis
+How does glucagon regulate pyruvate kinase during fasting?	Via protein kinase A it phosphorylates and inhibits pyruvate kinase.	glycolysis
+How much ATP is spent in the energy-investment phase of glycolysis, and what does it accomplish?	2 ATP are spent to phosphorylate and rearrange glucose, splitting it into two glyceraldehyde-3-phosphate molecules.	glycolysis
+In which cellular compartment does glycolysis occur, and what is its end product?	The cytosol; two molecules of pyruvate.	glycolysis
+Why do the energy-payoff steps of glycolysis run twice per glucose?	Because each glucose is split into two three-carbon molecules.	glycolysis
+What is a neuron's typical resting membrane potential, and which ion movement mainly sets it?	About -70 mV; potassium leaking out down its concentration gradient.	action-potential
+During the rising phase of an action potential, which channels open and which way does the ion move?	Voltage-gated sodium channels open and Na+ rushes into the cell (depolarization).	action-potential
+What two events at the peak drive the falling phase (repolarization) of an action potential?	Sodium channels inactivate and voltage-gated potassium channels open, letting K+ flow out.	action-potential
+What causes the hyperpolarization (afterhyperpolarization) following an action potential?	Some potassium channels stay open too long, so K+ efflux briefly drives the membrane below rest.	action-potential
+What causes the absolute refractory period, and how long is it roughly?	Inactivated sodium channels cannot reopen; about 1 ms.	action-potential
+Because action potentials are all-or-none, how is stimulus strength encoded?	By firing frequency, not spike amplitude.	action-potential

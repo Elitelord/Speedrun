@@ -1,0 +1,24 @@
+Ohm's Law, Resistance, and Simple Circuits
+Source: OpenStax, College Physics 2e (CC BY 4.0) — https://openstax.org/books/college-physics-2e — adapted.
+
+A voltage source such as a battery or generator maintains a potential difference
+(voltage) that sets up an electric field in a conductor, exerting force on
+charges and driving a current. Georg Ohm showed experimentally that the current
+in a metal conductor is directly proportional to the applied voltage: I ∝ V.
+This is a cause-and-effect relationship — voltage is the cause, current the
+effect.
+
+Resistance (R) opposes current flow; for a given voltage, current decreases as
+resistance increases. Combining these gives Ohm's law:
+
+    I = V / R     equivalently     V = I R     and     R = V / I
+
+The unit of resistance is the ohm (Ω): 1 Ω = 1 V/A. Materials for which R is
+constant (independent of V and I) are called ohmic; good conductors such as
+copper and aluminum are approximately ohmic. Devices built to provide a specific
+resistance are resistors.
+
+In a simple circuit — one voltage source and one resistor connected by wires of
+negligible resistance — the voltage drop across the resistor equals the source
+voltage. This reflects conservation of energy: the electrical energy supplied by
+the source is converted in the resistor to another form (often heat).

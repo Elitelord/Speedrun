@@ -18,6 +18,8 @@ PYTHONPATH, e.g.:
 
 from __future__ import annotations
 
+import base64
+import hashlib
 import os
 import re
 import tempfile
@@ -33,6 +35,14 @@ def _source_slug(name: str) -> str:
     """Turn a free-text source name into a tag-safe slug (no whitespace)."""
     slug = re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
     return slug or "unknown"
+
+
+def _stable_guid(tag: str, front: str) -> str:
+    """Deterministic note GUID from the section tag + front. Keeping the GUID
+    stable across rebuilds means re-importing a regenerated MCAT.apkg *updates*
+    the matching notes instead of creating duplicates."""
+    digest = hashlib.sha1(f"{tag}\x1f{front}".encode()).digest()
+    return base64.urlsafe_b64encode(digest).decode()[:16]
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SECTIONS = [
@@ -79,6 +89,7 @@ def main() -> None:
                     front, back = fields[0], fields[1]
                     source = fields[2] if len(fields) > 2 else ""
                     note = col.new_note(notetype)
+                    note.guid = _stable_guid(tag, front)
                     note["Front"] = front
                     note["Back"] = back
                     note.tags = [tag]

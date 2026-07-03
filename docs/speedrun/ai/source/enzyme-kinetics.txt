@@ -1,0 +1,33 @@
+Enzyme Kinetics
+Source: Wikipedia, "Enzyme kinetics" (CC BY-SA 4.0) — https://en.wikipedia.org/wiki/Enzyme_kinetics — adapted.
+
+Enzyme kinetics studies the rates of enzyme-catalyzed reactions. An enzyme binds
+substrate at its active site to form an enzyme-substrate (ES) complex, which is
+converted to product: E + S ⇌ ES → E + P. Enzymes show saturation kinetics: at
+low substrate concentration the rate rises nearly linearly with [S], while at
+high [S] the active sites become saturated and the rate approaches a maximum,
+Vmax. Enzymes speed reactions but do not change the equilibrium position.
+
+The Michaelis-Menten equation gives the initial velocity:
+
+    v0 = Vmax[S] / (KM + [S])
+
+where Vmax = kcat·[E]total and kcat (the turnover number) is the maximum number
+of reactions each active site catalyzes per second. KM (the Michaelis constant)
+is the substrate concentration at half-maximal velocity (v0 = Vmax/2); a low KM
+means the enzyme reaches half-max at low [S] (apparent high affinity). When the
+catalytic step is slow relative to ES dissociation, KM approximates the
+dissociation constant KD of ES.
+
+At low [S] (≪ KM), v0 ≈ (kcat/KM)[E][S]; the ratio kcat/KM measures catalytic
+efficiency. The most efficient (diffusion-limited) enzymes reach kcat/KM of
+10^8–10^10 M^-1 s^-1.
+
+Reversible inhibitors bind noncovalently; irreversible inhibitors covalently
+inactivate the enzyme. The three reversible types:
+  • Competitive: binds the active site, competing with substrate. Increases the
+    apparent KM; Vmax is unchanged (can be overcome by high [S]).
+  • Noncompetitive: binds an allosteric site; KM is unchanged but Vmax decreases.
+  • Uncompetitive: binds only the ES complex; decreases both KM and Vmax.
+On a Lineweaver-Burk (double-reciprocal) plot, competitive inhibition changes the
+x-intercept, noncompetitive changes the y-intercept (1/Vmax).

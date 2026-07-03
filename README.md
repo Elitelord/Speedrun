@@ -13,8 +13,9 @@ See **[Attribution & License](#attribution--license)**.
 
 ## What's new in this fork (the MCAT layer)
 
-All of the following ships in the **no-AI core** — everything runs locally, with
-no network calls, no LLM, no generated content:
+### Core (offline, no-AI)
+
+Everything below runs locally — no network calls, no LLM, no generated content:
 
 - **Topic-aware interleaving scheduler** (the core Rust change). Reorders the
   study queue into a round-robin across MCAT topic tags
@@ -34,16 +35,41 @@ no network calls, no LLM, no generated content:
   scheduler code.
 - **Seed MCAT deck** (`docs/speedrun/seed-deck/MCAT.apkg`) tagged by section.
 
+### AI & two-way sync (Friday layer)
+
+Cloud-AI features on desktop, all **safe by construction** and **fully optional**:
+
+- **Three honest scores** — **Memory / Performance / Readiness**, each with a
+  range and a give-up rule ("not enough data"), Readiness on the real **472–528**
+  scale — never one blended number. On the **Progress** page (desktop) and the
+  **Progress** tab + home header (Android).
+- **Grounded card generation + pre-display eval gate.** Cards are generated from
+  **named** MCAT sources (OpenStax CC-BY, Wikipedia CC-BY-SA); anything not
+  supported by its source is blocked, and a held-out gold set is graded against a
+  cutoff committed *before* results (beats a keyword baseline; no wrong card
+  ships). See **[docs/speedrun/ai/README.md](./docs/speedrun/ai/README.md)** and
+  **[eval-report.md](./docs/speedrun/ai/eval-report.md)**.
+- **Free-text production review.** Type an answer → an LLM grades it by meaning →
+  a miss gets a scaffolded hint before the reveal (not a silent flip).
+- **AI-off invariant.** With AI disabled (or no key / offline), generation and
+  grading abstain, review degrades to the native self-graded reveal, and the
+  three scores still compute.
+- **Two-way sync** desktop ↔ Android via Anki's own sync (AnkiWeb or a self-hosted
+  server): offline review, sync on reconnect, no lost or double-counted reviews.
+
 ## Architecture
 
 Anki (and therefore Speedrun) is multi-layered:
 
-- **Core Rust engine** — `rslib/` (the MCAT scheduler change is in
-  `rslib/src/scheduler/queue/builder/interleaving.rs` + `.../memory_score.rs`).
+- **Core Rust engine** — `rslib/` (interleaving in
+  `rslib/src/scheduler/queue/builder/interleaving.rs`; the three scores in
+  `rslib/src/scheduler/memory_score.rs` + `readiness.rs`).
 - **PyO3 bridge** — `pylib/rsbridge/` exposes the Rust API to Python.
 - **Python library + PyQt desktop app** — `pylib/anki/`, `qt/aqt/`.
-- **Svelte / TypeScript web frontend** — `ts/` (the memory dashboard is
-  `ts/routes/memory-dashboard/`).
+- **Svelte / TypeScript web frontend** — `ts/` (Anki's shared web components).
+  Speedrun's Home / Progress / Settings views are rendered in-window by the deck
+  browser app-shell (`qt/aqt/deckbrowser.py`); the AI pipeline lives in
+  `qt/aqt/speedrun_ai/`.
 - **Protobuf IPC** — `proto/` defines the API between layers.
 - **Android** — a separate AnkiDroid-based fork whose backend is compiled from
   this same Rust engine (see below).
@@ -68,12 +94,14 @@ Prebuilt installers are attached to the
 - **Emulator (x86_64):** download `AnkiDroid-play-x86_64-debug.apk` and install
   with `adb install -r AnkiDroid-play-x86_64-debug.apk`.
 
-**After installing (both platforms):** the desktop and Android apps are
-**separate collections**, so import the MCAT deck
-(`docs/speedrun/seed-deck/MCAT.apkg`) on each. Then, in **Deck options**, raise
-**New cards/day** so all three topics appear, and enable **FSRS** to power the
-memory score. Turn interleaving on via **Tools → "Interleave MCAT topics"**
-(desktop) or the DeckPicker overflow menu (Android).
+**After installing:** the desktop app **auto-loads the MCAT deck on first run**
+(no import step). On Android the deck arrives via **sync**, or import
+`MCAT.apkg` from the **+ (add-deck) menu**. The two apps are **separate
+collections** until you sign both into the same sync account. Enable **FSRS**
+(Deck options) to power the scores, and turn interleaving on via **Settings →
+Interleave** (desktop) or the **⋮ overflow → "Interleave MCAT topics"**
+(Android). The three scores live on the **Progress** page (desktop) and the
+**Progress** tab / home header (Android).
 
 ## Build from source
 

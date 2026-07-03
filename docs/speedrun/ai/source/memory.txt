@@ -1,0 +1,34 @@
+Memory
+Source: Wikipedia, "Memory" (CC BY-SA 4.0) — https://en.wikipedia.org/wiki/Memory — adapted.
+
+Memory is the faculty to encode, store, and retrieve information. It is often
+described as a three-stage system:
+
+  • Sensory memory holds sensory impressions for under a second. Subtypes: iconic
+    (visual), echoic (auditory), haptic (touch). Sperling showed a large but very
+    briefly available capacity.
+  • Short-term / working memory holds information for seconds without rehearsal,
+    with limited capacity — classically "7 ± 2" items, more recently ~4. Chunking
+    (grouping items into meaningful units) increases effective capacity.
+  • Long-term memory stores large amounts of information for long periods. It
+    encodes largely by meaning (semantically), whereas short-term memory tends to
+    encode acoustically. The hippocampus supports consolidation into long-term
+    storage but is not itself the store.
+
+Three processes: encoding (getting information in — deeper, meaning-based encoding
+yields stronger memories than shallow/surface encoding), storage (maintaining it),
+and retrieval (getting it back). Retrieval improves when cues at recall match
+those present during encoding (encoding specificity) and when context matches.
+
+Long-term memory divides into:
+  • Explicit (declarative) — conscious: semantic memory (facts, e.g. capitals)
+    and episodic memory (events tied to a time and place).
+  • Implicit (non-declarative) — unconscious: procedural memory (skills such as
+    riding a bike), expressed through performance rather than recollection.
+
+Consolidation stabilizes memories over time and requires structural/biochemical
+changes at synapses, including gene transcription and new protein synthesis. The
+Baddeley-Hitch working-memory model adds structure to short-term memory: a
+central executive (attentional control) directing a phonological loop (verbal
+rehearsal), a visuospatial sketchpad (visual/spatial information), and an
+episodic buffer (integrating information and linking to long-term memory).

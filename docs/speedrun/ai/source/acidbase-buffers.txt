@@ -1,0 +1,35 @@
+Acids, Bases, and Buffers
+Source: OpenStax, Chemistry 2e (CC BY 4.0) — https://openstax.org/books/chemistry-2e — adapted.
+
+Brønsted-Lowry acids and bases are defined in terms of proton transfer. An acid
+is a species that donates a proton (H+); a base is a species that accepts a
+proton. When an acid donates a proton, the remaining species is its conjugate
+base; when a base accepts a proton, it becomes its conjugate acid. In the
+reaction between water and ammonia, water donates a proton to ammonia, forming
+hydroxide (the conjugate base of water) and ammonium (the conjugate acid of
+ammonia). Species that can either donate or accept a proton are amphiprotic;
+water is the classic example.
+
+Water undergoes autoionization: 2 H2O ⇌ H3O+ + OH-, quantified by the
+ion-product constant Kw = [H3O+][OH-]. At 25 °C, Kw = 1.0 × 10^-14, and in pure
+water [H3O+] = [OH-] = 1.0 × 10^-7 M. This inverse relationship between hydronium
+and hydroxide holds for all aqueous solutions at a given temperature.
+
+A buffer solution contains appreciable amounts of a weak conjugate acid-base
+pair (for example acetic acid with sodium acetate, or ammonia with ammonium
+chloride) and resists changes in pH when small amounts of strong acid or base
+are added. Added strong base is neutralized by the weak acid; added strong acid
+is neutralized by the conjugate base. Because the weak acid and base ionize only
+slightly, the pH changes far less than it would in an unbuffered solution.
+
+The pH of a buffer is given by the Henderson-Hasselbalch equation, derived from
+the acid ionization constant Ka = [H3O+][A-]/[HA]:
+
+    pH = pKa + log([A-]/[HA])
+
+When the concentrations of the conjugate base and weak acid are equal, pH = pKa.
+Buffer capacity is the amount of acid or base a buffer can absorb before its pH
+changes by about one unit; it increases with the absolute concentrations of the
+two components. A buffer works best when the two components are present in
+roughly equal amounts, and it loses effectiveness once one component drops below
+about 10% of the other.

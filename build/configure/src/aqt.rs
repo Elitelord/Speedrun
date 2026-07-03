@@ -114,7 +114,20 @@ fn build_data_folder(build: &mut Build) -> Result<()> {
     build_pages(build)?;
     build_icons(build)?;
     copy_sveltekit(build)?;
+    copy_speedrun_seed(build)?;
     Ok(())
+}
+
+// Speedrun: bundle the pre-seeded MCAT deck so a fresh install auto-loads it
+// (no manual import required).
+fn copy_speedrun_seed(build: &mut Build) -> Result<()> {
+    build.add_action(
+        "qt:aqt:data:speedrun",
+        CopyFiles {
+            inputs: inputs![glob!["docs/speedrun/seed-deck/MCAT.apkg"]],
+            output_folder: "qt/_aqt/data/speedrun",
+        },
+    )
 }
 
 fn copy_sveltekit(build: &mut Build) -> Result<()> {

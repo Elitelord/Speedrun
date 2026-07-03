@@ -1,0 +1,29 @@
+Neurotransmitters and Synaptic Transmission
+Source: Wikipedia, "Neurotransmitter" (CC BY-SA 4.0) — https://en.wikipedia.org/wiki/Neurotransmitter — adapted.
+
+A neurotransmitter is a signaling molecule released by a neuron to affect another
+cell across a synapse. When an action potential reaches the axon terminal,
+voltage-gated calcium channels open, Ca2+ enters, and synaptic vesicles fuse with
+the presynaptic membrane to release neurotransmitter into the synaptic cleft. The
+transmitter diffuses across the cleft and binds receptors on the postsynaptic
+cell; the receptor determines whether the effect is excitatory (raises the chance
+of a postsynaptic action potential), inhibitory (lowers it), or modulatory.
+
+Major neurotransmitters:
+  • Glutamate — the main excitatory transmitter (>90% of synapses); central to
+    learning and synaptic plasticity; excess causes excitotoxicity.
+  • GABA — the main inhibitory transmitter; target of many sedatives/anxiolytics.
+  • Dopamine — reward, motivation, and fine motor control; loss in the substantia
+    nigra causes Parkinson's; excess signaling is linked to schizophrenia.
+  • Serotonin — mood, sleep, appetite, and more; implicated in depression.
+  • Acetylcholine — the first transmitter discovered; acts at the neuromuscular
+    junction (activating skeletal muscle) and widely in the brain.
+  • Norepinephrine — a catecholamine (from tyrosine); fight-or-flight arousal,
+    attention, mood.
+
+Signaling is terminated so receptors are not activated continuously, by three
+mechanisms: diffusion out of the cleft (with uptake by glia), enzymatic
+degradation (e.g. acetylcholinesterase breaks down acetylcholine), and reuptake
+(transporter proteins pump the transmitter back into the presynaptic neuron).
+These steps are drug targets — cocaine, for example, blocks dopamine reuptake so
+dopamine accumulates in the cleft.

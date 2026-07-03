@@ -1,0 +1,31 @@
+Thermodynamics: Gibbs Free Energy and Spontaneity
+Source: OpenStax, Chemistry 2e (CC BY 4.0) — https://openstax.org/books/chemistry-2e — adapted.
+
+Gibbs free energy (G) is a thermodynamic property that predicts whether a process
+occurs spontaneously. It combines enthalpy and entropy: G = H - TS. At constant
+temperature and pressure, the free energy change is:
+
+    ΔG = ΔH - TΔS
+
+A key advantage is that ΔG depends only on the system, so it does not require
+calculating the entropy change of the surroundings. It is related to the total
+entropy change by ΔG = -TΔS_univ, which makes it a reliable spontaneity
+indicator:
+
+    ΔG < 0  → spontaneous (in the forward direction)
+    ΔG > 0  → nonspontaneous
+    ΔG = 0  → system at equilibrium
+
+Temperature dependence follows from ΔG = ΔH - TΔS:
+  • ΔH < 0, ΔS > 0: spontaneous at all temperatures.
+  • ΔH > 0, ΔS < 0: nonspontaneous at all temperatures.
+  • ΔH < 0, ΔS < 0: spontaneous only at low temperature (|TΔS| < |ΔH|).
+  • ΔH > 0, ΔS > 0: spontaneous only at high temperature (TΔS > ΔH).
+For a temperature-dependent case, the changeover occurs when ΔG = 0, at
+T = ΔH°/ΔS° (e.g. a phase-transition temperature).
+
+Standard free energy: ΔG° = ΔH° - TΔS°, or from free energies of formation,
+ΔG° = Σν·ΔG°f(products) - Σν·ΔG°f(reactants); ΔG°f of an element in its standard
+state is zero. Under nonstandard conditions, ΔG = ΔG° + RT ln Q. At equilibrium
+ΔG = 0 and Q = K, giving ΔG° = -RT ln K — so a negative ΔG° corresponds to
+K > 1 (products favored).

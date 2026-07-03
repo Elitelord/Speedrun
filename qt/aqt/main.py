@@ -502,6 +502,8 @@ class AnkiQt(QMainWindow):
 
         # Speedrun: apply the profile's AI settings (master toggle + user key).
         self.apply_ai_prefs()
+        # Speedrun: first run — auto-load the bundled MCAT deck (no import step).
+        self._maybe_import_seed_deck()
         self.setup_sound()
         self.flags = FlagManager(self)
         # show main window
@@ -1064,7 +1066,7 @@ title="{}" {}>{}</button>""".format(
             self._nav_buttons[key] = btn
 
         add_button("home", "Home", lambda: self.show_deck_view("home"), True)
-        add_button("cards", "Cards", self.onBrowse, False)
+        add_button("cards", "Cards", lambda: self.show_deck_view("cards"), True)
         add_button(
             "readiness", "Progress", lambda: self.show_deck_view("readiness"), True
         )
@@ -1119,6 +1121,34 @@ title="{}" {}>{}</button>""".format(
 
         set_api_key_override(self.pm.openai_key())
         aqt.speedrun_ai.set_ai_enabled(self.pm.ai_features_enabled())
+
+    def _maybe_import_seed_deck(self) -> None:
+        """First run: silently import the bundled MCAT deck so the app ships with
+        content and no manual import is required. Runs once per profile."""
+        if self.pm.meta.get("speedrun_seed_imported"):
+            return
+        # Mark done up front so we only ever try once (even on failure or if the
+        # user later deletes the deck).
+        self.pm.meta["speedrun_seed_imported"] = True
+        from aqt.utils import aqt_data_path
+
+        apkg = aqt_data_path() / "speedrun" / "MCAT.apkg"
+        if not apkg.exists() or self.col.decks.id_for_name("MCAT") is not None:
+            return
+        from anki.collection import (
+            ImportAnkiPackageOptions,
+            ImportAnkiPackageRequest,
+        )
+        from aqt.operations import QueryOp
+
+        def op(col: Any) -> None:
+            col.import_anki_package(
+                ImportAnkiPackageRequest(
+                    package_path=str(apkg), options=ImportAnkiPackageOptions()
+                )
+            )
+
+        QueryOp(parent=self, op=op, success=lambda _: self.reset()).run_in_background()
 
     def closeAllWindows(self, onsuccess: Callable) -> None:
         aqt.dialogs.closeAll(onsuccess)

@@ -1,0 +1,29 @@
+Glycolysis
+Source: Wikipedia, "Glycolysis" (CC BY-SA 4.0) — https://en.wikipedia.org/wiki/Glycolysis — adapted.
+
+Glycolysis is the metabolic pathway that breaks glucose (C6H12O6) down into two
+molecules of pyruvate. It occurs in the cytosol and consists of ten
+enzyme-catalyzed steps, releasing free energy that is captured as ATP and NADH.
+The pathway has two phases.
+
+Energy-investment phase (first five steps): the cell spends 2 ATP to phosphorylate
+and rearrange glucose, splitting it into two three-carbon sugar phosphates
+(glyceraldehyde-3-phosphate). This investment commits glucose to catabolism.
+
+Energy-payoff phase (last five steps): because each glucose yields two
+three-carbon molecules, these steps run twice per glucose, producing 4 ATP and 2
+NADH. The net yield per glucose is therefore 2 ATP and 2 NADH.
+
+Three irreversible, regulated steps are the control points:
+  • Hexokinase phosphorylates glucose to glucose-6-phosphate, trapping it in the
+    cell; it is inhibited by its product (feedback).
+  • Phosphofructokinase-1 (PFK-1) catalyzes the committed step and is the main
+    control point: allosterically activated by AMP and inhibited by ATP (and
+    citrate), so flux tracks the cell's energy status.
+  • Pyruvate kinase catalyzes the last step (producing pyruvate and ATP) and is
+    regulated hormonally — glucagon (via protein kinase A) phosphorylates and
+    inhibits it during fasting; insulin promotes its dephosphorylation.
+
+Summary: Glucose + 2 NAD+ + 2 ADP + 2 Pi → 2 Pyruvate + 2 NADH + 2 H+ + 2 ATP +
+2 H2O. Pyruvate is a branch point: it enters the citric acid cycle (aerobic), is
+reduced to lactate (anaerobic), or feeds biosynthesis.

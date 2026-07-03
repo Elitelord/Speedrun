@@ -55,17 +55,30 @@ def _target_hit(row: dict[str, Any], hits: list[Retrieved]) -> int:
 def recall_and_mrr(
     gold: list[dict[str, Any]], retriever: Retriever
 ) -> tuple[float, float]:
-    if not gold:
-        return 0.0, 0.0
-    hits = 0
-    rr_sum = 0.0
-    for row in gold:
-        rank = _target_hit(row, retriever(row["front"]))
-        if rank:
-            hits += 1
-            rr_sum += 1.0 / rank
-    n = len(gold)
-    return hits / n, rr_sum / n
+    ranks = _ranks(gold, retriever)
+    return _recall_at(ranks, k=5), _mrr(ranks)
+
+
+def _ranks(gold: list[dict[str, Any]], retriever: Retriever) -> list[int]:
+    """1-based rank of the correct target for each gold query (0 = not found)."""
+    return [_target_hit(row, retriever(row["front"])) for row in gold]
+
+
+def _recall_at(ranks: list[int], k: int) -> float:
+    """Fraction of queries whose correct target was retrieved within the top k.
+
+    We report several k: at k=5 a small, cleanly-separated corpus saturates (both
+    retrievers find the source), so the discriminating operating point is the
+    stricter top-1 / top-3, where ranking quality actually shows."""
+    if not ranks:
+        return 0.0
+    return sum(1 for r in ranks if r and r <= k) / len(ranks)
+
+
+def _mrr(ranks: list[int]) -> float:
+    if not ranks:
+        return 0.0
+    return sum(1.0 / r for r in ranks if r) / len(ranks)
 
 
 @dataclass
@@ -127,11 +140,12 @@ def run_eval(
     rag_retriever: Retriever,
     bm25_retriever: Retriever | None,
 ) -> dict[str, Any]:
-    rag_recall, rag_mrr = recall_and_mrr(gold, rag_retriever)
-    if bm25_retriever is not None:
-        bm25_recall, bm25_mrr = recall_and_mrr(gold, bm25_retriever)
-    else:
-        bm25_recall, bm25_mrr = 0.0, 0.0
+    rag_ranks = _ranks(gold, rag_retriever)
+    bm_ranks = (
+        _ranks(gold, bm25_retriever) if bm25_retriever is not None else [0] * len(gold)
+    )
+    rag_recall, rag_mrr = _recall_at(rag_ranks, 5), _mrr(rag_ranks)
+    bm25_recall, bm25_mrr = _recall_at(bm_ranks, 5), _mrr(bm_ranks)
     confusion = classify_cards(gold, index)
     m = confusion.metrics()
 
@@ -153,6 +167,10 @@ def run_eval(
             "bm25_recall": bm25_recall,
             "bm25_mrr": bm25_mrr,
             "rag_minus_bm25_recall": rag_recall - bm25_recall,
+            "rag_recall_at_1": _recall_at(rag_ranks, 1),
+            "rag_recall_at_3": _recall_at(rag_ranks, 3),
+            "bm25_recall_at_1": _recall_at(bm_ranks, 1),
+            "bm25_recall_at_3": _recall_at(bm_ranks, 3),
         },
         "confusion": asdict(confusion),
         "card_metrics": m,
@@ -171,11 +189,21 @@ def write_report(result: dict[str, Any], path: Path) -> None:
         "",
         "## Beat-a-baseline (retrieval)",
         "",
-        "| Retriever | Recall@k | MRR |",
-        "| --- | --- | --- |",
-        f"| RAG (embeddings) | {r['rag_recall']:.3f} | {r['rag_mrr']:.3f} |",
-        f"| BM25 (keyword baseline) | {r['bm25_recall']:.3f} | {r['bm25_mrr']:.3f} |",
-        f"| **RAG − BM25 recall** | **{r['rag_minus_bm25_recall']:+.3f}** | |",
+        "Queries are phrased the way a *learner* would ask (paraphrased), not "
+        "copied from the source — so keyword search can't win by lexical echo. "
+        "At k=5 a cleanly-separated corpus saturates (both find the source); the "
+        "stricter **top-1 / top-3** and **MRR** are where ranking quality shows.",
+        "",
+        "| Retriever | Recall@1 | Recall@3 | Recall@5 | MRR |",
+        "| --- | --- | --- | --- | --- |",
+        f"| RAG (embeddings) | {r['rag_recall_at_1']:.3f} | "
+        f"{r['rag_recall_at_3']:.3f} | {r['rag_recall']:.3f} | {r['rag_mrr']:.3f} |",
+        f"| BM25 (keyword baseline) | {r['bm25_recall_at_1']:.3f} | "
+        f"{r['bm25_recall_at_3']:.3f} | {r['bm25_recall']:.3f} | {r['bm25_mrr']:.3f} |",
+        f"| **RAG − BM25** | **{r['rag_recall_at_1'] - r['bm25_recall_at_1']:+.3f}** "
+        f"| **{r['rag_recall_at_3'] - r['bm25_recall_at_3']:+.3f}** "
+        f"| **{r['rag_minus_bm25_recall']:+.3f}** "
+        f"| **{r['rag_mrr'] - r['bm25_mrr']:+.3f}** |",
         "",
         "## Good/bad card classifier (2×2 confusion matrix)",
         "",

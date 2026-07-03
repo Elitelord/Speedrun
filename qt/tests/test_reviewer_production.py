@@ -17,7 +17,7 @@ def test_decide_ease_attempt_defaults() -> None:
     assert Reviewer._decide_ease("correct", None, 1) == 3  # Good, first try
     assert Reviewer._decide_ease("correct", None, 2) == 2  # Hard, after a hint
     assert Reviewer._decide_ease("wrong", None, 2) == 1  # Again
-    assert Reviewer._decide_ease("partial", None, 1) == 1  # Again
+    assert Reviewer._decide_ease("partial", None, 1) == 2  # Hard (you were close)
 
 
 def test_decide_ease_honours_explicit_grader_ease() -> None:

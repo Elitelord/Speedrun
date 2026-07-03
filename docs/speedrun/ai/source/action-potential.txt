@@ -1,25 +1,30 @@
 Neurons and the Action Potential
+Source: Wikipedia, "Action potential" (CC BY-SA 4.0) — https://en.wikipedia.org/wiki/Action_potential — adapted.
 
-A neuron maintains a resting membrane potential of about negative seventy
-millivolts, with the inside of the cell negative relative to the outside. This
-potential is established by the sodium-potassium pump, which moves three sodium
-ions out of the cell for every two potassium ions it moves in, and by the
-membrane's selective permeability to potassium.
+A neuron maintains a resting membrane potential of about -70 mV, with the inside
+negative relative to the outside. This results from ion pumps and channels;
+potassium leaking out down its concentration gradient is a major contributor.
 
-An action potential is a rapid, all-or-none change in membrane potential that
-travels along the axon. When a stimulus depolarizes the membrane to threshold,
-voltage-gated sodium channels open and sodium rushes into the cell, driving the
-membrane potential sharply positive. This is depolarization.
+When input depolarizes the membrane (makes it less negative) to the threshold
+(about -55 mV), the neuron fires. Action potentials depend on voltage-gated ion
+channels. Above threshold, voltage-gated sodium channels open rapidly and Na+
+(more concentrated outside) rushes in, making the interior more positive; this
+opens still more sodium channels — a positive-feedback loop that drives the fast
+rising phase (depolarization).
 
-Repolarization follows as the sodium channels inactivate and voltage-gated
-potassium channels open, allowing potassium to leave the cell. The membrane
-briefly becomes more negative than the resting potential, a state called
-hyperpolarization, before returning to rest.
+At the peak, two things happen: sodium channels inactivate (the same voltage that
+opened them now closes them), and slower voltage-gated potassium channels open,
+letting K+ flow outward. The shift from sodium to potassium current drives the
+falling phase (repolarization). Because some potassium channels stay open a bit
+too long, the membrane briefly overshoots to more negative than rest
+(hyperpolarization / afterhyperpolarization) before returning to the resting
+potential.
 
-During the refractory period the neuron cannot fire a second action potential,
-which ensures the signal travels in one direction. In myelinated axons the
-signal jumps between the nodes of Ranvier in a process called saltatory
-conduction, which greatly increases conduction speed.
-
-When the action potential reaches the axon terminal it triggers the release of
-neurotransmitters into the synapse, carrying the signal to the next cell.
+Action potentials are all-or-none: either threshold is reached and a full,
+constant-amplitude spike fires, or nothing happens. Stimulus strength is encoded
+by firing frequency, not amplitude. After a spike, the absolute refractory period
+(inactivated sodium channels cannot reopen, ~1 ms) makes another spike
+impossible; the following relative refractory period (lingering K+ efflux
+hyperpolarizes the cell) allows firing only with a stronger stimulus. The
+absolute refractory period ensures the action potential propagates in one
+direction along the axon.

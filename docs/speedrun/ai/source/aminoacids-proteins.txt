@@ -1,26 +1,38 @@
 Amino Acids and Protein Structure
+Source: Wikipedia, "Amino acid" (CC BY-SA 4.0) — https://en.wikipedia.org/wiki/Amino_acid — adapted.
 
-Proteins are polymers built from twenty standard amino acids. Every standard
-amino acid has a central alpha carbon bonded to an amino group, a carboxyl
-group, a hydrogen atom, and a variable side chain called the R group. The
-identity and chemistry of the side chain determine whether an amino acid is
-nonpolar, polar, acidic, or basic.
+An amino acid has a central (alpha) carbon bonded to four groups: an amino group
+(NH2), a carboxylic acid group (COOH), a hydrogen atom, and a variable side chain
+(R group). The R group determines the amino acid's chemistry. Side chains are
+classified as nonpolar/hydrophobic (e.g. alanine, valine, leucine, isoleucine,
+methionine, phenylalanine, tryptophan, proline), polar uncharged (serine,
+threonine, asparagine, glutamine), acidic/negatively charged at physiological pH
+(aspartate, glutamate), or basic/positively charged (arginine, lysine, and
+histidine). Histidine has a side-chain pKa near 6.0, so it exists in both charged
+and uncharged forms near physiological pH, which makes it valuable in enzyme
+acid-base catalysis.
 
-Two amino acids are joined by a peptide bond, an amide linkage formed by a
-dehydration (condensation) reaction between the carboxyl group of one amino acid
-and the amino group of the next. A chain of amino acids linked this way is a
-polypeptide.
+Near neutral pH an amino acid exists as a zwitterion, with a protonated amino
+group (NH3+) and a deprotonated carboxyl group (COO-): NH3+-CHR-COO-. Net charge
+is zero but the molecule carries both a positive and a negative site. In strongly
+acidic solution (low pH) the carboxylate is protonated (NH3+-CHR-COOH, net +); in
+strongly basic solution (high pH) the ammonium loses its proton (NH2-CHR-COO-,
+net -).
 
-Protein structure is described at four levels. The primary structure is the
-linear sequence of amino acids. The secondary structure consists of local folds
-such as the alpha helix and the beta pleated sheet, both stabilized by hydrogen
-bonds between backbone atoms. The tertiary structure is the overall
-three-dimensional shape of a single polypeptide, stabilized by interactions among
-side chains, including hydrophobic interactions, hydrogen bonds, ionic bonds, and
-disulfide bridges between cysteine residues. The quaternary structure is the
-arrangement of multiple polypeptide subunits into a single functional protein,
-as in hemoglobin.
+The isoelectric point (pI) is the pH at which the molecule carries no net charge.
+For an amino acid with a nonionizable side chain, pI = ½(pKa1 + pKa2). For one
+with an ionizable side chain, use the two pKa values that bracket the neutral
+species (e.g. for an acidic amino acid, pI = ½(pKa1 + pKa,R)). Net charge depends
+on pH relative to pI: below the pI the molecule is net positive, above the pI it
+is net negative, and at the pI charges balance (zero electrophoretic mobility,
+minimum solubility).
 
-The charge of an amino acid depends on the pH of its environment relative to the
-pKa values of its ionizable groups. At a pH below its isoelectric point a residue
-tends to carry a net positive charge, and above it a net negative charge.
+Amino acids join by peptide bonds — amide linkages formed by a condensation
+(dehydration) reaction between the carboxyl group of one amino acid and the amino
+group of the next, releasing water. The chain (a polypeptide) runs from the
+N-terminus to the C-terminus. Protein structure has four levels: primary (the
+linear sequence), secondary (local folds such as the alpha helix and beta
+pleated sheet, stabilized by backbone hydrogen bonds), tertiary (the overall 3-D
+fold of one chain, stabilized by side-chain interactions — hydrophobic contacts,
+hydrogen bonds, ionic/salt bridges, and disulfide bonds between cysteines), and
+quaternary (assembly of multiple subunits, as in hemoglobin).

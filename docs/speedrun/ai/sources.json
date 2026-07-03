@@ -5,13 +5,58 @@
         "topic": "mcat::biobiochem"
     },
     {
-        "file": "thermodynamics.txt",
-        "name": "thermodynamics",
-        "topic": "mcat::chemphys"
+        "file": "enzyme-kinetics.txt",
+        "name": "enzyme-kinetics",
+        "topic": "mcat::biobiochem"
+    },
+    {
+        "file": "glycolysis.txt",
+        "name": "glycolysis",
+        "topic": "mcat::biobiochem"
     },
     {
         "file": "action-potential.txt",
         "name": "action-potential",
+        "topic": "mcat::biobiochem"
+    },
+    {
+        "file": "acidbase-buffers.txt",
+        "name": "acidbase-buffers",
+        "topic": "mcat::chemphys"
+    },
+    {
+        "file": "reaction-kinetics.txt",
+        "name": "reaction-kinetics",
+        "topic": "mcat::chemphys"
+    },
+    {
+        "file": "gibbs-free-energy.txt",
+        "name": "gibbs-free-energy",
+        "topic": "mcat::chemphys"
+    },
+    {
+        "file": "circuits-ohms-law.txt",
+        "name": "circuits-ohms-law",
+        "topic": "mcat::chemphys"
+    },
+    {
+        "file": "conditioning.txt",
+        "name": "conditioning",
+        "topic": "mcat::psychsoc"
+    },
+    {
+        "file": "memory.txt",
+        "name": "memory",
+        "topic": "mcat::psychsoc"
+    },
+    {
+        "file": "neurotransmitters.txt",
+        "name": "neurotransmitters",
+        "topic": "mcat::psychsoc"
+    },
+    {
+        "file": "social-stratification.txt",
+        "name": "social-stratification",
         "topic": "mcat::psychsoc"
     }
 ]

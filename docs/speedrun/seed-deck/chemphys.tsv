@@ -1,24 +1,32 @@
-What three subatomic particles make up an atom?	Protons, neutrons, and electrons.
-What is the charge of a proton, neutron, and electron?	Protons are positive, neutrons are neutral, and electrons are negative.
-What defines the atomic number of an element?	The number of protons in the nucleus.
-What are isotopes?	Atoms of the same element that have different numbers of neutrons.
-What is a covalent bond?	A bond formed when two atoms share electrons.
-What is an ionic bond?	A bond formed by the electrostatic attraction between oppositely charged ions.
-What is electronegativity?	A measure of an atom's tendency to attract shared electrons in a bond.
-What defines an acid on the pH scale?	A solution with a pH below 7, indicating a higher concentration of hydrogen ions.
-What is the pH of a neutral solution at 25 degrees Celsius?	7.
-What does a lower pH value indicate?	A higher concentration of hydrogen (H+) ions and greater acidity.
-What is Avogadro's number?	Approximately 6.022 x 10^23, the number of particles in one mole.
-What is the ideal gas law?	PV = nRT, relating pressure, volume, moles, and temperature of a gas.
-What is an exothermic reaction?	A reaction that releases energy, usually as heat, to its surroundings.
-What is an endothermic reaction?	A reaction that absorbs energy from its surroundings.
-What is Newton's first law of motion?	An object stays at rest or in uniform motion unless acted on by a net external force.
-What is Newton's second law of motion?	The net force on an object equals its mass times its acceleration (F = ma).
-What is Newton's third law of motion?	For every action there is an equal and opposite reaction.
-What is the SI unit of force?	The newton (N).
-What is the acceleration due to gravity near Earth's surface?	Approximately 9.8 meters per second squared.
-How is kinetic energy defined?	The energy of a moving object, equal to one-half mass times velocity squared.
-What is the law of conservation of energy?	Energy cannot be created or destroyed, only transformed from one form to another.
-What is Ohm's law?	Voltage equals current times resistance (V = IR).
-What is the SI unit of electric current?	The ampere (amp).
-What is the relationship between the wavelength and frequency of a wave?	They are inversely proportional; as wavelength increases, frequency decreases.
+A buffer has pKa 4.76 with equal concentrations of weak acid and conjugate base. What is its pH, and why?	pH 4.76, because pH = pKa when [A-] = [HA] (Henderson-Hasselbalch).	acidbase-buffers
+A buffer's conjugate base concentration is 10 times its weak acid concentration. How does its pH compare to the pKa?	It is one unit higher (pH = pKa + 1), since log(10) = 1.	acidbase-buffers
+In the reaction where water donates a proton to ammonia, what is the conjugate acid formed?	Ammonium (NH4+).	acidbase-buffers
+When water donates a proton to ammonia, what conjugate base of water is produced?	Hydroxide (OH-).	acidbase-buffers
+What is the value of Kw for water at 25 degrees C?	1.0 x 10^-14.	acidbase-buffers
+In pure water at 25 degrees C, what is the concentration of hydronium ([H3O+])?	1.0 x 10^-7 M.	acidbase-buffers
+A species that can either donate or accept a proton is called what?	Amphiprotic.	acidbase-buffers
+In an acetic acid / acetate buffer, what neutralizes added strong base?	The weak acid (acetic acid).	acidbase-buffers
+A buffer loses effectiveness once one component drops below roughly what fraction of the other?	About 10%.	acidbase-buffers
+A reaction is second order in A. If [A] is tripled, how does the rate change?	It increases 9-fold (3^2).	reaction-kinetics
+For a first-order dependence on a reactant, what happens to the rate when that reactant's concentration is doubled?	The rate doubles.	reaction-kinetics
+For a zero-order reactant, what happens to the rate when its concentration is increased?	Nothing; the rate does not change.	reaction-kinetics
+A reaction is first order in A and second order in B. What is the overall reaction order?	Third order (1 + 2).	reaction-kinetics
+Does the rate constant k depend on reactant concentrations?	No; k is independent of concentration but varies with temperature.	reaction-kinetics
+What are the units of the rate constant k for a first-order reaction?	s^-1.	reaction-kinetics
+What are the units of the rate constant k for a second-order reaction?	L·mol^-1·s^-1.	reaction-kinetics
+How are the reaction orders m and n determined?	Experimentally (not from the stoichiometric coefficients).	reaction-kinetics
+For a reaction with delta-H < 0 and delta-S < 0, when is it spontaneous?	Only at low temperature, where |T·delta-S| < |delta-H| so delta-G < 0.	gibbs-free-energy
+For a reaction with delta-H < 0 and delta-S > 0, at what temperatures is it spontaneous?	At all temperatures.	gibbs-free-energy
+For a reaction with delta-H > 0 and delta-S < 0, at what temperatures is it spontaneous?	None; it is nonspontaneous at all temperatures.	gibbs-free-energy
+For a reaction with delta-H > 0 and delta-S > 0, when is it spontaneous?	Only at high temperature, where T·delta-S > delta-H.	gibbs-free-energy
+What does delta-G = 0 indicate about a system?	The system is at equilibrium.	gibbs-free-energy
+Write the equation relating Gibbs free energy change to enthalpy and entropy at constant T and P.	delta-G = delta-H - T·delta-S.	gibbs-free-energy
+At what temperature does a temperature-dependent reaction change over between spontaneous and nonspontaneous?	When delta-G = 0, at T = delta-H° / delta-S°.	gibbs-free-energy
+A reaction has a negative delta-G°. What does this imply about its equilibrium constant K?	K > 1 (products favored).	gibbs-free-energy
+Write the equation relating standard free energy change to the equilibrium constant.	delta-G° = -RT ln K.	gibbs-free-energy
+A 12 V source drives 3 A through a resistor. What is its resistance?	4 ohms (R = V/I).	circuits-ohms-law
+A 24 V source drives current through a 6 ohm resistor. What is the current?	4 A (I = V/R).	circuits-ohms-law
+For a fixed voltage, what happens to the current as resistance increases?	The current decreases.	circuits-ohms-law
+What is one ohm expressed in terms of volts and amperes?	1 ohm = 1 V/A.	circuits-ohms-law
+Materials for which resistance R is constant, independent of V and I, are called what?	Ohmic.	circuits-ohms-law
+In a simple circuit with one source and one resistor, the voltage drop across the resistor equals what?	The source voltage (by conservation of energy).	circuits-ohms-law

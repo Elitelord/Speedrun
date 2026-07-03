@@ -1,0 +1,36 @@
+Learning: Classical and Operant Conditioning
+Sources: Wikipedia, "Classical conditioning" and "Operant conditioning"
+(CC BY-SA 4.0) — https://en.wikipedia.org/wiki/Classical_conditioning ,
+https://en.wikipedia.org/wiki/Operant_conditioning — adapted.
+
+CLASSICAL CONDITIONING pairs a biologically potent stimulus with a neutral one so
+that the neutral stimulus comes to elicit a response. The unconditioned stimulus
+(US) naturally produces a response (the unconditioned response, UR) without
+learning — e.g. food (US) causes salivation (UR). After a neutral stimulus is
+repeatedly paired with the US, it becomes a conditioned stimulus (CS) that alone
+elicits a conditioned response (CR). Ivan Pavlov demonstrated this in dogs,
+pairing a sound with food until the sound alone caused salivation.
+  • Acquisition: the CR develops as CS and US are paired (usually over several
+    pairings).
+  • Extinction: presenting the CS repeatedly without the US weakens the CR (the
+    original learning is suppressed, not erased).
+  • Spontaneous recovery: after a rest, an extinguished CR reappears, weaker.
+  • Generalization: stimuli similar to the CS also elicit the CR (more similar →
+    stronger). Discrimination: learning to respond to the CS but not to similar
+    stimuli that were never reinforced.
+
+OPERANT (INSTRUMENTAL) CONDITIONING modifies voluntary behavior through its
+consequences. Reinforcement increases a behavior; punishment decreases it. Each
+can be positive (a stimulus is added) or negative (a stimulus is removed):
+  • Positive reinforcement: add a pleasant stimulus (food after a lever press).
+  • Negative reinforcement: remove an aversive stimulus (escape a loud noise).
+  • Positive punishment: add an aversive stimulus (pain from a hot stove).
+  • Negative punishment: remove a pleasant stimulus (lose a privilege).
+
+Reinforcement schedules shape response patterns: fixed-ratio (after a set number
+of responses) and variable-ratio (after a varying number — produces the highest,
+most persistent responding) and fixed-interval / variable-interval (first
+response after a set / varying time). Shaping reinforces successive
+approximations toward a target behavior. B. F. Skinner, using the operant
+chamber ("Skinner box") and cumulative recorder, founded the systematic study of
+operant conditioning, focusing on observable behavior and consequences.

@@ -59,10 +59,6 @@ class AnkiWebViewKind(Enum):
     FIELDS = "fields"
     IMPORT_LOG = "import log"
     IMPORT_ANKI_PACKAGE = "anki package import"
-    # Speedrun: honest MCAT memory-score dashboard (needs backend API access).
-    MEMORY_DASHBOARD = "memory dashboard"
-    # Speedrun: consolidated MCAT settings page (needs backend API access).
-    SETTINGS = "settings"
 
 
 class AuthInterceptor(QWebEngineUrlRequestInterceptor):
@@ -146,8 +142,6 @@ class AnkiWebPage(QWebEnginePage):
             AnkiWebViewKind.IMPORT_ANKI_PACKAGE,
             AnkiWebViewKind.IMPORT_CSV,
             AnkiWebViewKind.IMPORT_LOG,
-            AnkiWebViewKind.MEMORY_DASHBOARD,
-            AnkiWebViewKind.SETTINGS,
         )
 
         global _profile_with_api_access, _profile_without_api_access
