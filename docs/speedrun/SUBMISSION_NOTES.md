@@ -57,7 +57,7 @@ by both, so there is no per-platform scheduler code.
 app. The "deployed site" link is a **GitHub Release** containing the installable
 artifacts (Windows `.msi` + Android `.apk`).
 
-**Commit:** `[your latest pushed main hash]` (branch `main`).
+**Commit:** `c7b5d6a02f909c32ff7bb3670e4cf072640627f0` (branch `main`).
 
 **Verification (run against that commit):**
 
@@ -76,9 +76,9 @@ artifacts (Windows `.msi` + Android `.apk`).
 
 **Repositories:**
 
-- Engine + desktop: [ENGINE REPO URL]
-- Android app: [SPEEDRUN-ANDROID URL]
-- Android backend: [SPEEDRUN-ANDROID-BACKEND URL]
+- Engine + desktop: https://github.com/Elitelord/Speedrun
+- Android app: https://github.com/Elitelord/Speedrun-Android
+- Android backend: https://github.com/Elitelord/Speedrun-Android-Backend
 
 ---
 
