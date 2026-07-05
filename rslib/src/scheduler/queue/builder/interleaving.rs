@@ -34,8 +34,12 @@ use crate::scheduler::topics::topic_index_for_tags;
 const MIN_TOPIC_WEIGHT: f32 = 0.1;
 
 /// Weakness assumed for a topic that has no reviewed cards yet (no FSRS memory
-/// state to measure), i.e. a neutral `1 - 0.5`.
-const UNKNOWN_TOPIC_WEAKNESS: f32 = 0.5;
+/// state to measure). Set high — but below a fully-failed topic — so a
+/// brand-new section (e.g. CARS you haven't studied) is still ingested and
+/// interleaved at a healthy rate, while topics you're actively getting wrong
+/// (weakness -> ~1.0) still surface more often. Below this, an untouched topic
+/// sat at a neutral 0.5 and got starved next to weak topics.
+const UNKNOWN_TOPIC_WEAKNESS: f32 = 0.75;
 
 impl QueueBuilder {
     /// Map each gathered card's note to a topic index, so `build()` can later

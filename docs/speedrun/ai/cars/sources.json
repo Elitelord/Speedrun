@@ -1,0 +1,17 @@
+[
+    {
+        "file": "ethics-consequences.txt",
+        "name": "ethics-consequences",
+        "topic": "mcat::cars"
+    },
+    {
+        "file": "printing-and-society.txt",
+        "name": "printing-and-society",
+        "topic": "mcat::cars"
+    },
+    {
+        "file": "urban-community.txt",
+        "name": "urban-community",
+        "topic": "mcat::cars"
+    }
+]

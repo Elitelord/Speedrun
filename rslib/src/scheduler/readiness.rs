@@ -43,7 +43,7 @@ use crate::search::SortMode;
 
 /// Give-up thresholds shared with the memory score (tunable via the request).
 const DEFAULT_TOPIC_MIN_REVIEWS: u32 = 20;
-const DEFAULT_DECK_MIN_REVIEWS: u32 = 100;
+const DEFAULT_DECK_MIN_REVIEWS: u32 = 60;
 /// Readiness needs at least half of the four sections studied before we show a
 /// projected total.
 const READINESS_MIN_COVERAGE: f32 = 0.5;

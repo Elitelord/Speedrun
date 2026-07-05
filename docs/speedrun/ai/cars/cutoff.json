@@ -1,0 +1,5 @@
+{
+    "_comment": "PRE-REGISTERED CARS eval cutoff. Committed before any generation/eval results were seen (git history is the enforcement). Positive class = bad question; false negatives (a bad reasoning item shipped as good) are the dangerous cell and are capped tightly.",
+    "min_accuracy": 0.8,
+    "max_false_negative_rate": 0.1
+}

@@ -19,7 +19,7 @@ gold set with a pre-registered cutoff**, and only then emit passing cards.
    desktop reviewer; this pipeline is the generation + eval half.)
 
 Both sit behind a **pre-display eval gate**: a held-out gold set, a cutoff
-committed *before* any results (git history is the proof), a 2×2 good/bad-card
+committed _before_ any results (git history is the proof), a 2×2 good/bad-card
 confusion matrix with the false-negative cell capped, and a **beat-a-baseline**
 retrieval check (embeddings vs. BM25). Cards that fail don't ship.
 
@@ -37,8 +37,9 @@ earns its added complexity rather than assuming it.
 - **No fine-tuning, no vector DB** — a cloud API + a JSON embedding index and a
   numpy cosine pass are deterministic, dependency-light, and enough at this corpus
   size.
-- **CARS passage generation & the AI performance model** — deferred to the Sunday
-  gate / post-MVP (`POST_MVP_ROADMAP.md`); seeded content first.
+- **CARS passage generation** is now built as its own grounded, eval-gated track
+  (`cars/` — see [`cars/README.md`](cars/README.md)); the AI _performance model_
+  (predicting new-question accuracy) is still deferred to post-MVP.
 - **No AI on the phone** — Android stays offline-first; AI is desktop-only.
 - **AI is fully optional** — with **Enable AI** off (or no key / network down),
   generation and grading **abstain**, the reviewer falls back to the native

@@ -1,0 +1,35 @@
+Source: original expository text written for the Speedrun MCAT fork.
+License: CC BY-SA 4.0. Topic: moral philosophy (consequentialism vs. duty).
+
+Moral philosophers have long disagreed about what makes an action right. One
+tradition, consequentialism, holds that the rightness of an act depends entirely
+on its outcomes. In its best-known form, utilitarianism, the right action is the
+one that produces the greatest balance of well-being over suffering, counting
+every affected person's interests equally. On this view a policy is justified not
+by the intentions behind it but by the aggregate good it brings about, and a
+seemingly harsh choice can be defensible if it prevents a larger harm.
+
+A rival tradition, often associated with Kant, locates rightness not in
+consequences but in duties and the respect owed to persons. Here some acts are
+wrong in themselves, regardless of the good they might produce, because they
+treat a person merely as a means to an end. Lying, breaking a promise, or
+sacrificing an innocent to benefit others violates a duty that no favorable
+outcome can cancel. Duty-based ethics prizes consistency: a principle is
+acceptable only if one could will that everyone follow it.
+
+Critics of consequentialism argue that it can license troubling acts whenever the
+numbers favor them, and that it demands more calculation than people can perform
+in real time. Critics of duty-based ethics reply that rigid rules can produce
+avoidable misery, as when honesty toward a murderer endangers an innocent life.
+Each view, in other words, is most vulnerable precisely where the other is
+strongest: consequentialism struggles to protect the individual against the
+group, while duty ethics struggles to bend when the stakes are extreme.
+
+Some thinkers seek a middle path. Rule consequentialism asks not which act but
+which general rule would, if widely adopted, produce the best outcomes, thereby
+preserving stable duties like promise-keeping while still grounding them in human
+welfare. Others argue that the two traditions are answering different questions —
+one about what to do, the other about what kind of person to be — and that a
+mature moral life draws on both. What unites the debate is a shared refusal to
+reduce ethics to mere preference: whatever the right answer, these theories
+insist that moral claims can be reasoned about, defended, and revised.

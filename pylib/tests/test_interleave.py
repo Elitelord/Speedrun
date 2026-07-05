@@ -17,6 +17,10 @@ from anki.consts import CARD_TYPE_REV, QUEUE_TYPE_REV
 from tests.shared import getEmptyCol
 
 TOPICS = ["mcat::biobiochem", "mcat::chemphys", "mcat::psychsoc"]
+# The shipped deck also carries a CARS section once the AI pipeline has emitted
+# CARS units into MCAT.apkg; the seed-deck test configures all four so it stays
+# green whether or not CARS cards are present.
+SEED_TOPICS = TOPICS + ["mcat::cars"]
 
 # The shipped seed deck, built by docs/speedrun/seed-deck/build_apkg.py.
 SEED_APKG = os.path.abspath(
@@ -32,11 +36,11 @@ SEED_APKG = os.path.abspath(
 )
 
 
-def _topic_of_card(col, cid: int) -> int | None:
+def _topic_of_card(col, cid: int, topics: list[str] = TOPICS) -> int | None:
     """Classify a card into a topic index the same way the scheduler does:
     the first configured topic tag that the note carries (exact or subtag)."""
     tags = col.get_card(cid).note().tags
-    for idx, topic in enumerate(TOPICS):
+    for idx, topic in enumerate(topics):
         if any(tag == topic or tag.startswith(topic + "::") for tag in tags):
             return idx
     return None
@@ -123,27 +127,31 @@ def test_interleave_orders_the_shipped_seed_deck():
     conf["rev"]["perDay"] = 1000
     col.decks.update_config(conf)
 
-    # Every seed card carries exactly one of the three topic tags.
+    # Every seed card carries exactly one MCAT topic tag (science or CARS).
     cids = col.find_cards("tag:mcat::*")
     assert len(cids) >= 9, "seed deck should have several cards per topic"
-    assert all(_topic_of_card(col, cid) is not None for cid in cids)
+    assert all(_topic_of_card(col, cid, SEED_TOPICS) is not None for cid in cids)
 
-    def queue_topics() -> list[int | None]:
+    def queue_topics() -> list[int]:
         queued = col._backend.get_queued_cards(
             fetch_limit=12, intraday_learning_only=False
         )
-        return [_topic_of_card(col, qc.card.id) for qc in queued.cards]
+        out = [_topic_of_card(col, qc.card.id, SEED_TOPICS) for qc in queued.cards]
+        return [t for t in out if t is not None]
 
-    # Uniform interleaving: the first passes round-robin 0,1,2,0,1,2,...
-    col.sched.set_interleave_config(enabled=True, topic_tags=TOPICS)
+    # Interleaving spreads topics out: no two consecutive cards share a topic
+    # (until a topic runs out, so we check a safe leading prefix). Robust to
+    # however many sections the shipped deck carries (3 science, or 4 with CARS).
+    col.sched.set_interleave_config(enabled=True, topic_tags=SEED_TOPICS)
     uniform = queue_topics()
     assert len(uniform) >= 9
-    assert uniform[:9] == [0, 1, 2, 0, 1, 2, 0, 1, 2], uniform
+    prefix = uniform[:9]
+    assert all(a != b for a, b in zip(prefix, prefix[1:])), uniform
 
     # Weakness weighting is a safe no-op here: the seed cards are all new with no
     # review history, so every topic is equally "weak" and the order is
     # unchanged. (The weighting only diverges once real reviews exist.)
     col.sched.set_interleave_config(
-        enabled=True, topic_tags=TOPICS, weight_by_weakness=True
+        enabled=True, topic_tags=SEED_TOPICS, weight_by_weakness=True
     )
     assert queue_topics()[:9] == uniform[:9]

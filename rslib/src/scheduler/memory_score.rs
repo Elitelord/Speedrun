@@ -28,7 +28,7 @@ use crate::search::SortMode;
 /// Default give-up thresholds (tunable via the request). No per-topic score
 /// until this many graded reviews, and no overall/deck score until this many.
 const DEFAULT_TOPIC_MIN_REVIEWS: u32 = 20;
-const DEFAULT_DECK_MIN_REVIEWS: u32 = 100;
+const DEFAULT_DECK_MIN_REVIEWS: u32 = 60;
 
 /// Band half-width constant: `k / sqrt(graded_reviews)`. Chosen so ~30 reviews
 /// gives roughly ±9% and ~100 reviews roughly ±5%.

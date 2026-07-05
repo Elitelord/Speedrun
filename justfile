@@ -174,6 +174,22 @@ ci branch:
 complexipy-diff:
     {{ ninja }} check:complexipy-diff
 
+# Speedrun: memory-model calibration report (pass --collection <path to collection.anki2>)
+calibration *args:
+    {{ speedrun_py }} docs/speedrun/eval/calibration.py {{ args }}
+
+# Speedrun: interleaving study-feature ablation report (3 builds, pre-registered)
+ablation:
+    {{ speedrun_py }} docs/speedrun/eval/ablation.py
+
+# Speedrun: CARS AI eval gate (needs OPENAI_API_KEY; append --fake for offline)
+cars-eval *args:
+    {{ speedrun_py_qt }} -m aqt.speedrun_ai.pipeline cars-eval {{ args }}
+
+# Speedrun: leakage check — no gold test item is a near-copy of its source (§7e)
+leakage:
+    {{ speedrun_py }} docs/speedrun/eval/leakage.py
+
 # Remove build outputs from out/ (pass keep-env to keep node_modules/pyenv); macOS/Linux
 clean *args:
     ./tools/clean {{ args }}
@@ -186,3 +202,8 @@ playwright_env := if os() == "windows" { "set PLAYWRIGHT_BROWSERS_PATH=out\\play
 yarn := if os() == "windows" { "out\\extracted\\node\\yarn.cmd" } else { "out/extracted/node/bin/yarn" }
 uv := env("UV_BINARY", if os() == "windows" { "out\\extracted\\uv\\uv" } else { "out/extracted/uv/uv" })
 export UV_PROJECT_ENVIRONMENT := if os() == "windows" { "out\\pyenv" } else { "out/pyenv" }
+
+# Speedrun: run a script against the built pylib (Rust engine bindings on the path)
+speedrun_py := if os() == "windows" { "$env:PYTHONUTF8='1'; $env:PYTHONPATH='out\\pylib'; out\\pyenv\\Scripts\\python.exe" } else { "PYTHONUTF8=1 PYTHONPATH=out/pylib out/pyenv/bin/python" }
+# Speedrun: same, but with the qt layer on the path (for aqt.speedrun_ai)
+speedrun_py_qt := if os() == "windows" { "$env:PYTHONUTF8='1'; $env:PYTHONPATH='qt;out\\qt;out\\pylib'; out\\pyenv\\Scripts\\python.exe" } else { "PYTHONUTF8=1 PYTHONPATH=qt:out/qt:out/pylib out/pyenv/bin/python" }

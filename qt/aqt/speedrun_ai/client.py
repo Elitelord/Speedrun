@@ -60,11 +60,29 @@ _GRADE_SYSTEM = (
     '"correct". Only use "partial" when a distinct required element is entirely '
     'missing, and "wrong" only when the answer is essentially incorrect or '
     "unrelated. When unsure between correct and partial, choose correct.\n"
+    "Also suggest how well the student knew it, as a spaced-repetition grade so "
+    "the card comes back at the right time — judge the ANSWER quality, not just "
+    "right/wrong:\n"
+    '  "easy"  = fully correct, complete, and confident/effortless;\n'
+    '  "good"  = correct with the key idea, the normal pass;\n'
+    '  "hard"  = essentially right but shaky, partial, or missing a detail;\n'
+    '  "again" = wrong, unrelated, or blank.\n'
+    "CRITICAL — do NOT give the answer away. The student may still be "
+    "attempting, so neither 'feedback' nor 'hint' may state, paraphrase, spell "
+    "out, or name the correct answer or any distinctive key term / proper noun / "
+    "synonym from it. Comment only on the student's own attempt and point toward "
+    "the underlying concept in general terms. If you cannot write a hint without "
+    "naming the answer, make the hint an empty string.\n"
     'Return a compact JSON object with keys: verdict (one of "correct", '
-    '"partial", "wrong"), feedback (one short sentence for the student), '
-    "hint (a conceptual nudge that does NOT reveal the answer; empty if "
-    "verdict is correct), abstain (boolean). Output JSON only."
+    '"partial", "wrong"), grade (one of "again", "hard", "good", "easy"), '
+    "feedback (one short sentence about THEIR attempt, never revealing the "
+    "answer), hint (a conceptual nudge that does NOT contain the answer or its "
+    "key terms; empty when verdict is correct or when any hint would give it "
+    "away), abstain (boolean). Output JSON only."
 )
+
+# Map the grader's spaced-repetition grade onto an FSRS ease (1-4).
+_GRADE_TO_EASE = {"again": 1, "hard": 2, "good": 3, "easy": 4}
 
 
 class OpenAIClient:
@@ -167,10 +185,11 @@ def parse_grade(raw: str) -> GradeResult:
     verdict = str(data.get("verdict", VERDICT_WRONG)).lower()
     if verdict not in (VERDICT_CORRECT, VERDICT_PARTIAL, VERDICT_WRONG):
         verdict = VERDICT_WRONG
+    ease = _GRADE_TO_EASE.get(str(data.get("grade", "")).lower())
     return GradeResult(
         verdict=verdict,
         correct=verdict == VERDICT_CORRECT,
-        ease=None,
+        ease=ease,
         feedback=str(data.get("feedback", "")),
         hint=str(data.get("hint", "")),
         abstained=False,
@@ -210,16 +229,18 @@ class FakeClient:
         exp = set(expected.lower().split())
         got = set(typed.lower().split())
         overlap = len(exp & got) / max(1, len(exp))
+        if overlap >= 0.85:
+            return GradeResult(VERDICT_CORRECT, True, 4, "Correct.", "")
         if overlap >= 0.6:
-            return GradeResult(VERDICT_CORRECT, True, None, "Correct.", "")
+            return GradeResult(VERDICT_CORRECT, True, 3, "Correct.", "")
         if overlap >= 0.25:
             return GradeResult(
                 VERDICT_PARTIAL,
                 False,
-                None,
+                2,
                 "Partly right.",
                 "Reconsider the key term.",
             )
         return GradeResult(
-            VERDICT_WRONG, False, None, "Not quite.", "Think about the core concept."
+            VERDICT_WRONG, False, 1, "Not quite.", "Think about the core concept."
         )

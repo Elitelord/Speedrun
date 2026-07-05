@@ -37,8 +37,14 @@ class DeckBrowserBottomBar:
         self.deck_browser = deck_browser
 
 
-# Speedrun: fallback MCAT topic tags when none are configured.
-_DEFAULT_MCAT_TAGS = ["mcat::biobiochem", "mcat::chemphys", "mcat::psychsoc"]
+# Speedrun: fallback MCAT topic tags when none are configured. CARS is the
+# fourth MCAT section; it lights up once CARS cards (mcat::cars) are studied.
+_DEFAULT_MCAT_TAGS = [
+    "mcat::biobiochem",
+    "mcat::chemphys",
+    "mcat::psychsoc",
+    "mcat::cars",
+]
 
 
 @dataclass
@@ -622,7 +628,8 @@ html, body { background:var(--sr-bg) !important; color:var(--sr-ink) !important;
 
     @staticmethod
     def _topic_label(label: str) -> str:
-        return (label.split("::")[-1] if label else "").title()
+        seg = label.split("::")[-1] if label else ""
+        return "CARS" if seg.lower() == "cars" else seg.title()
 
     def _section_bar_row(self, label: str, pct: int | None, value_html: str) -> str:
         """A per-section row: label + value on top, a progress bar below.
@@ -667,9 +674,6 @@ html, body { background:var(--sr-bg) !important; color:var(--sr-ink) !important;
                 rows += self._section_bar_row(
                     label, None, '<span class="muted">not enough data</span>'
                 )
-        rows += self._section_bar_row(
-            "CARS", None, '<span class="muted">coming with the CARS module</span>'
-        )
         return rows
 
     def _render_readiness(self) -> str:

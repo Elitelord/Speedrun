@@ -1503,6 +1503,7 @@ title="{}" {}>{}</button>""".format(
             "mcat::biobiochem",
             "mcat::chemphys",
             "mcat::psychsoc",
+            "mcat::cars",
         ]
 
     def on_toggle_interleave(self, checked: bool) -> None:

@@ -98,6 +98,17 @@ def main() -> None:
                     col.add_note(note, deck_id)
                     total += 1
 
+        # Fold in CARS (passage + multiple-choice) cards if the AI pipeline has
+        # emitted an eval-passed units file. Same deck, so one import demos all
+        # four MCAT sections and interleaving mixes CARS with the sciences.
+        from build_cars import add_cars_notes
+
+        cars_units = os.path.join(
+            HERE, "..", "ai", "cars", "generated", "units.json"
+        )
+        cars_added = add_cars_notes(col, deck_id, cars_units)
+        total += cars_added
+
         col.export_anki_package(
             out_path=out_apkg,
             options=ExportAnkiPackageOptions(
@@ -109,7 +120,11 @@ def main() -> None:
             ),
             limit=DeckIdLimit(deck_id),
         )
-        print(f"wrote {out_apkg} ({total} cards across {len(SECTIONS)} topics)")
+        topic_count = len(SECTIONS) + (1 if cars_added else 0)
+        print(
+            f"wrote {out_apkg} ({total} cards across {topic_count} topics; "
+            f"{cars_added} CARS)"
+        )
     finally:
         col.close()
 

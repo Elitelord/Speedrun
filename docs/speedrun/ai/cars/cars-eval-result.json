@@ -1,0 +1,26 @@
+{
+ "passed": true,
+ "checks": {
+  "accuracy": true,
+  "false_negative_rate": true
+ },
+ "cutoff": {
+  "_comment": "PRE-REGISTERED CARS eval cutoff. Committed before any generation/eval results were seen (git history is the enforcement). Positive class = bad question; false negatives (a bad reasoning item shipped as good) are the dangerous cell and are capped tightly.",
+  "min_accuracy": 0.8,
+  "max_false_negative_rate": 0.1
+ },
+ "confusion": {
+  "tp": 4,
+  "fp": 0,
+  "tn": 8,
+  "fn": 0
+ },
+ "card_metrics": {
+  "accuracy": 1.0,
+  "false_negative_rate": 0.0,
+  "wrong_answer_rate": 0.0,
+  "precision": 1.0,
+  "recall": 1.0
+ },
+ "gold_size": 12
+}

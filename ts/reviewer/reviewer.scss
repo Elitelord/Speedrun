@@ -135,3 +135,107 @@ button {
 .nightMode img.drawing {
     filter: string.unquote("invert(1) hue-rotate(180deg)");
 }
+
+/* Speedrun: free-text (production) review UI — feedback card, grade chips,
+ * suggested-grade pill, and the session progress bar. Colours use translucent
+ * tints so they read on both light and dark themes. */
+
+#study-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: rgba(128, 128, 128, 0.22);
+    z-index: 100;
+}
+#study-progress-fill {
+    height: 100%;
+    width: 0;
+    background: #1565c0;
+    transition: width 0.35s ease;
+}
+body.nightMode #study-progress-fill {
+    background: #4f9bff;
+}
+
+#ai-feedback {
+    margin: 1.2em auto 0;
+    max-width: 640px;
+}
+#ai-feedback:empty {
+    display: none;
+}
+
+.ai-card {
+    text-align: left;
+    border-radius: 12px;
+    padding: 16px 18px;
+    border: 1px solid rgba(128, 128, 128, 0.25);
+    border-left: 5px solid rgba(128, 128, 128, 0.6);
+    background: rgba(128, 128, 128, 0.08);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+.ai-status {
+    font-size: 1.5em;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 6px;
+}
+.ai-verdict {
+    font-size: 1.1em;
+    line-height: 1.45;
+}
+.ai-hint {
+    margin-top: 10px;
+    font-size: 1.05em;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: rgba(21, 101, 192, 0.1);
+}
+.ai-actions {
+    margin-top: 10px;
+    font-size: 0.95em;
+    opacity: 0.85;
+}
+.ai-reveal-answer {
+    margin-top: 4px;
+}
+
+/* suggested-grade row */
+.ai-suggest {
+    margin-top: 12px;
+    font-size: 1.05em;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.ai-grade {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 999px;
+    font-size: 1.05em;
+    font-weight: 700;
+    color: #fff;
+}
+.ai-grade-again { background: #c62828; }
+.ai-grade-hard  { background: #b26a00; }
+.ai-grade-good  { background: #2e7d32; }
+.ai-grade-easy  { background: #1565c0; }
+
+/* per-state accent on the card */
+.ai-correct  { border-left-color: #2e7d32; background: rgba(46, 125, 50, 0.1); }
+.ai-correct .ai-status  { color: #2e7d32; }
+.ai-close    { border-left-color: #b26a00; background: rgba(178, 106, 0, 0.1); }
+.ai-close .ai-status    { color: #b26a00; }
+.ai-retry    { border-left-color: #b26a00; background: rgba(178, 106, 0, 0.1); }
+.ai-retry .ai-status    { color: #b26a00; }
+.ai-revealed { border-left-color: #1565c0; background: rgba(21, 101, 192, 0.1); }
+.ai-revealed .ai-status { color: #1565c0; }
+.ai-grading  { opacity: 0.8; }
+
+body.nightMode .ai-correct .ai-status  { color: #6fcf73; }
+body.nightMode .ai-close .ai-status,
+body.nightMode .ai-retry .ai-status     { color: #e0a54a; }
+body.nightMode .ai-revealed .ai-status  { color: #6ba8ff; }

@@ -26,7 +26,16 @@
         "extra",
         "ts/.svelte-kit",
         "ts/vite.config.ts.timestamp*",
-        "qt/installer/*-template"
+        "qt/installer/*-template",
+        "docs/speedrun/eval/*.json",
+        "docs/speedrun/eval/*-report.md",
+        "docs/speedrun/ai/eval-report.md",
+        "docs/speedrun/ai/eval-result.json",
+        "docs/speedrun/ai/index.json",
+        "docs/speedrun/ai/generated/**",
+        "docs/speedrun/ai/cars/cars-eval-report.md",
+        "docs/speedrun/ai/cars/cars-eval-result.json",
+        "docs/speedrun/ai/cars/generated/**"
     ],
     "plugins": [
         "https://plugins.dprint.dev/typescript-0.91.6.wasm",

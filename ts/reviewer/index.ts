@@ -261,11 +261,32 @@ export function _setProductionGrading(on: boolean): void {
     if (t) {
         t.disabled = on;
     }
-    // Clear the region when grading stops, otherwise a stale "Grading…" is left
-    // behind when the grade resolves or the AI falls back to self-grading.
+    // Show a spinner while grading; clear it when grading stops, so a stale
+    // "Grading…" is never left behind (the caller re-fills it with the verdict
+    // card right after). An empty card is also collapsed by CSS.
     _aiFeedbackEl().innerHTML = on
-        ? "<span class='ai-grading'>Grading…</span>"
+        ? "<div class='ai-card ai-grading'><div class='ai-status'>Grading…</div></div>"
         : "";
+}
+
+// Speedrun: thin progress bar pinned to the top of the reviewer showing how far
+// through the session the learner is. Created lazily; survives card changes.
+export function _setStudyProgress(done: number, total: number): void {
+    let bar = document.getElementById("study-progress");
+    if (!bar) {
+        bar = document.createElement("div");
+        bar.id = "study-progress";
+        const fill = document.createElement("div");
+        fill.id = "study-progress-fill";
+        bar.appendChild(fill);
+        document.body.insertAdjacentElement("afterbegin", bar);
+    }
+    const pct = total > 0 ? Math.max(0, Math.min(100, (done / total) * 100)) : 0;
+    const fill = document.getElementById("study-progress-fill");
+    if (fill) {
+        fill.style.width = `${pct}%`;
+    }
+    bar.setAttribute("title", `${done} of ${total} cards started in this deck`);
 }
 
 export function _emulateMobile(enabled: boolean): void {

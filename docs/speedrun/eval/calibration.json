@@ -1,0 +1,30 @@
+{
+  "real": {
+    "n": 0,
+    "brier": null,
+    "log_loss": null,
+    "ece": null,
+    "base_rate": null
+  },
+  "simulated": {
+    "n": 0,
+    "brier": null,
+    "log_loss": null,
+    "ece": null,
+    "base_rate": null
+  },
+  "combined": {
+    "n": 0,
+    "brier": null,
+    "log_loss": null,
+    "ece": null,
+    "base_rate": null
+  },
+  "diagnostics": {
+    "cards_seen": 108,
+    "usable_reviews": 0,
+    "skipped_first_review": 18,
+    "skipped_no_interval": 25,
+    "skipped_cram": 0
+  }
+}

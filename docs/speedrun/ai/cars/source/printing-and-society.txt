@@ -1,0 +1,36 @@
+Source: original expository text written for the Speedrun MCAT fork.
+License: CC BY-SA 4.0. Topic: history of communication technology.
+
+The spread of the printing press in fifteenth-century Europe is often described
+as a sudden revolution, but its effects were slower and stranger than that image
+suggests. Movable type did not create the appetite for books; that appetite
+already existed among merchants, clergy, and a growing class of literate
+townspeople. What the press changed was scale. A manuscript that once took a
+scribe months to copy could now be produced in hundreds of identical copies,
+and identical copies made a new kind of trust possible: a reader in one city
+could be confident that the text before them matched the one discussed elsewhere.
+
+This standardization had consequences no one intended. When errors could be
+compared across copies, they could also be corrected, and later editions grew
+more accurate rather than drifting apart as hand-copied texts had. Fixed page
+numbers and indexes turned books into tools that could be searched, not merely
+read from beginning to end. Knowledge became cumulative in a way that favored
+those who could gather many books and cross-reference them.
+
+Yet the same technology that spread reliable information also spread error and
+propaganda with equal efficiency. Printers were businesses, and they printed what
+sold: sensational pamphlets, dubious remedies, and polemics as readily as
+scripture and science. Authorities that had once controlled a small number of
+scribes now faced a diffuse network of presses they could not easily monitor, and
+their attempts at censorship often advertised the very works they hoped to
+suppress.
+
+Historians caution against crediting the press with outcomes that depended on many
+forces at once. The religious and political upheavals of the following century
+drew on economic strain, dynastic ambition, and long-standing grievances; print
+amplified these currents rather than causing them. The lesson, some argue, is
+that a communication technology rarely dictates a single result. It lowers the
+cost of copying and distribution, and in doing so it strengthens whatever
+tendencies — toward inquiry or toward manipulation — are already present in a
+society. The press was powerful precisely because it was neutral about what it
+carried.

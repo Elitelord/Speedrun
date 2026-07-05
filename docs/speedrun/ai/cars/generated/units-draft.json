@@ -1,0 +1,191 @@
+[
+ {
+  "passage": "Moral philosophy has long grappled with the question of what constitutes the rightness of an action, leading to a rich tapestry of debate between two primary traditions: consequentialism and duty-based ethics. Consequentialism posits that the morality of an action is determined solely by its outcomes. The most prominent form of this theory, utilitarianism, asserts that the right action is the one that maximizes overall well-being while minimizing suffering, treating the interests of all affected individuals as equal. This perspective emphasizes that the justification for a policy lies not in the intentions behind it but in the aggregate good it produces. Thus, even actions that may appear harsh or morally questionable can be defended if they prevent a greater harm, highlighting a utilitarian commitment to the greater good over individual rights.\n\nIn stark contrast, duty-based ethics, often associated with the philosopher Immanuel Kant, argues that the morality of an action is rooted in the duties and respect owed to individuals. According to this view, certain actions are inherently wrong, regardless of their potential positive outcomes, because they treat individuals merely as means to an end. For instance, lying, breaking promises, or sacrificing an innocent person for the benefit of others are seen as violations of moral duty that cannot be justified by favorable consequences. This ethical framework values consistency and universality, suggesting that a principle is only acceptable if it can be willed as a universal law applicable to everyone.\n\nCritics of consequentialism raise concerns that it can justify morally troubling actions whenever the numerical outcomes favor them, arguing that it requires a level of calculation that is often impractical in real-life situations. Conversely, proponents of duty-based ethics contend that rigid adherence to moral rules can lead to unnecessary suffering, as illustrated by scenarios where honesty towards a murderer could endanger an innocent life. This interplay reveals a fundamental tension: consequentialism often fails to protect individual rights against the majority, while duty-based ethics can be inflexible in extreme situations.\n\nIn response to these critiques, some philosophers advocate for a middle ground. Rule consequentialism, for example, shifts the focus from individual acts to the general rules that, if widely adopted, would yield the best outcomes. This approach seeks to maintain stable duties, such as promise-keeping, while still grounding them in the welfare of individuals. Other thinkers suggest that the two ethical traditions address different aspects of moral life\u2014one focusing on actions and the other on character. A mature moral life, they argue, draws on insights from both perspectives, recognizing that ethical dilemmas often require a nuanced understanding that transcends simple binaries.\n\nWhat unites these philosophical debates is a shared commitment to the idea that ethics cannot be reduced to mere preference or subjective opinion. Regardless of which theory one finds more compelling, all parties agree that moral claims are subject to reasoned argumentation, defense, and revision. This insistence on the rationality of moral discourse underscores the complexity of ethical decision-making and the importance of engaging with diverse perspectives in the pursuit of a just society.",
+  "source_name": "ethics-consequences",
+  "topic_tag": "mcat::cars",
+  "questions": [
+   {
+    "stem": "What is the primary argument presented in the passage regarding the relationship between consequentialism and duty-based ethics?",
+    "options": [
+     "Consequentialism is superior because it focuses on outcomes.",
+     "Duty-based ethics is more practical in real-life situations.",
+     "Both ethical theories have strengths and weaknesses that can inform a more nuanced moral perspective.",
+     "Consequentialism and duty-based ethics are fundamentally incompatible."
+    ],
+    "answer_index": 2,
+    "explanation": "The passage discusses how both consequentialism and duty-based ethics have their strengths and weaknesses, suggesting that a mature moral life may draw on both perspectives. This indicates that the two theories can inform a more nuanced understanding of ethics, making option 3 the best answer.",
+    "qtype": "main idea",
+    "supported": true,
+    "reasons": []
+   },
+   {
+    "stem": "According to the passage, what is a significant criticism of consequentialism?",
+    "options": [
+     "It can justify morally troubling actions based on numerical outcomes.",
+     "It fails to account for individual rights.",
+     "It is too rigid in its application of moral rules.",
+     "It does not consider the intentions behind actions."
+    ],
+    "answer_index": 0,
+    "explanation": "The passage explicitly states that critics of consequentialism argue it can license troubling acts whenever the numbers favor them, making option 1 the best answer. The other options misinterpret the criticisms presented in the text.",
+    "qtype": "inference",
+    "supported": true,
+    "reasons": []
+   },
+   {
+    "stem": "How does the author characterize the tone of the debate between consequentialism and duty-based ethics?",
+    "options": [
+     "Dismissive and unproductive.",
+     "Balanced and analytical.",
+     "Overly simplistic and binary.",
+     "Emotionally charged and subjective."
+    ],
+    "answer_index": 1,
+    "explanation": "The author presents a balanced and analytical tone throughout the passage, discussing the strengths and weaknesses of both ethical theories without dismissing either. This makes option 2 the best choice, while the other options do not accurately reflect the author's approach.",
+    "qtype": "tone/attitude",
+    "supported": true,
+    "reasons": []
+   },
+   {
+    "stem": "If a new ethical theory emerged that combined elements of both consequentialism and duty-based ethics, what might it emphasize based on the passage?",
+    "options": [
+     "The importance of individual rights over collective outcomes.",
+     "The necessity of calculating outcomes in every moral decision.",
+     "The need for flexible rules that promote overall well-being while respecting individual duties.",
+     "The irrelevance of intentions in moral decision-making."
+    ],
+    "answer_index": 2,
+    "explanation": "The passage suggests that some thinkers advocate for a middle path that combines elements of both theories, emphasizing the importance of general rules that produce good outcomes while maintaining respect for individual duties. Thus, option 3 is the best answer, while the others do not align with the synthesis proposed in the text.",
+    "qtype": "application",
+    "supported": true,
+    "reasons": []
+   }
+  ]
+ },
+ {
+  "passage": "The spread of the printing press in fifteenth-century Europe is often described as a sudden revolution, but its effects were slower and stranger than that image suggests. Movable type did not create the appetite for books; that appetite already existed among merchants, clergy, and a growing class of literate townspeople. What the press changed was scale. A manuscript that once took a scribe months to copy could now be produced in hundreds of identical copies, and identical copies made a new kind of trust possible: a reader in one city could be confident that the text before them matched the one discussed elsewhere.\n\nThis standardization had consequences no one intended. When errors could be compared across copies, they could also be corrected, and later editions grew more accurate rather than drifting apart as hand-copied texts had. Fixed page numbers and indexes turned books into tools that could be searched, not merely read from beginning to end. Knowledge became cumulative in a way that favored those who could gather many books and cross-reference them.\n\nYet the same technology that spread reliable information also spread error and propaganda with equal efficiency. Printers were businesses, and they printed what sold: sensational pamphlets, dubious remedies, and polemics as readily as scripture and science. Authorities that had once controlled a small number of scribes now faced a diffuse network of presses they could not easily monitor, and their attempts at censorship often advertised the very works they hoped to suppress.\n\nHistorians caution against crediting the press with outcomes that depended on many forces at once. The religious and political upheavals of the following century drew on economic strain, dynastic ambition, and long-standing grievances; print amplified these currents rather than causing them. The lesson, some argue, is that a communication technology rarely dictates a single result. It lowers the cost of copying and distribution, and in doing so it strengthens whatever tendencies \u2014 toward inquiry or toward manipulation \u2014 are already present in a society. The press was powerful precisely because it was neutral about what it carried.",
+  "source_name": "printing-and-society",
+  "topic_tag": "mcat::cars",
+  "questions": [
+   {
+    "stem": "What is the main argument presented in the passage regarding the impact of the printing press?",
+    "options": [
+     "The printing press caused a sudden revolution in communication.",
+     "The printing press amplified existing societal tendencies rather than dictating outcomes.",
+     "The printing press was solely responsible for the spread of reliable information.",
+     "The printing press eliminated the need for censorship in society."
+    ],
+    "answer_index": 1,
+    "explanation": "The key argument is that the printing press amplified existing societal tendencies rather than dictating outcomes, as stated in the passage. The other options misinterpret the role of the printing press or exaggerate its effects.",
+    "qtype": "main idea",
+    "supported": true,
+    "reasons": []
+   },
+   {
+    "stem": "According to the passage, how did the printing press change the nature of knowledge accumulation?",
+    "options": [
+     "It made knowledge more accessible to the general public.",
+     "It allowed for the correction of errors and cumulative knowledge through cross-referencing.",
+     "It created a monopoly on information for those who owned printing presses.",
+     "It discouraged the spread of sensationalism and propaganda."
+    ],
+    "answer_index": 1,
+    "explanation": "The passage states that the printing press allowed for the correction of errors and cumulative knowledge through cross-referencing, which is the correct interpretation. The other options either misrepresent the effects of the press or contradict the passage's content.",
+    "qtype": "inference",
+    "supported": true,
+    "reasons": []
+   },
+   {
+    "stem": "What tone does the author adopt when discussing the unintended consequences of the printing press?",
+    "options": [
+     "Optimistic about the spread of information.",
+     "Cautious and analytical regarding its effects.",
+     "Dismissive of the printing press's significance.",
+     "Celebratory of the technological advancement."
+    ],
+    "answer_index": 1,
+    "explanation": "The author adopts a cautious and analytical tone when discussing the unintended consequences of the printing press, emphasizing the complexity of its impact. The other options do not accurately reflect the author's nuanced perspective.",
+    "qtype": "tone",
+    "supported": true,
+    "reasons": []
+   },
+   {
+    "stem": "If a new communication technology were to emerge today, what might the author suggest about its potential impact?",
+    "options": [
+     "It would likely lead to a singular outcome in society.",
+     "It would amplify existing societal trends, whether positive or negative.",
+     "It would eliminate misinformation entirely.",
+     "It would be controlled by a few powerful entities."
+    ],
+    "answer_index": 1,
+    "explanation": "The author suggests that a new communication technology would amplify existing societal trends, as seen in the discussion of the printing press. The other options misinterpret the author's argument about the neutrality and potential of communication technologies.",
+    "qtype": "application",
+    "supported": true,
+    "reasons": []
+   }
+  ]
+ },
+ {
+  "passage": "The evolution of urban sociology has sparked a profound debate regarding the nature of community in modern cities. Early sociologists expressed concern that the rise of urban life would lead to the dissolution of community bonds that were once prevalent in village settings. In these smaller, more intimate environments, individuals were interconnected through multiple roles; a neighbor could also be a customer, a fellow worshipper, or a relative. This web of overlapping relationships fostered a sense of belonging and accountability, creating a social fabric that tightly bound behavior. In contrast, the urban landscape appeared to replace these 'thick' relationships with 'thin' ones characterized by anonymity, brief interactions, and a sense of freedom that could easily devolve into isolation. Thus, the narrative emerged that urban life traded the warmth of belonging for the coldness of liberty, where the price of privacy was often loneliness.\n\nHowever, subsequent research has nuanced this perspective, revealing that urban residents do not merely exist among faceless strangers. Instead, they cultivate dense networks within their neighborhoods, forming communities based on shared interests, languages, or trades. This shift indicates that cities do not obliterate community; rather, they transform it, allowing individuals the autonomy to select their affiliations. Freed from the constraints of traditional ties, urban dwellers can assemble communities of affinity, connecting with others who resonate with their interests, even if those individuals reside miles apart.\n\nYet, this newfound selectivity is not without its drawbacks. Communities of choice can become insular, reinforcing existing beliefs and limiting exposure to diverse perspectives. The anonymity that enables individuals to escape the confines of a stifling hometown can also lead to urban fragmentation, where enclaves of like-minded individuals rarely intersect. Whether this phenomenon signifies a loss of community or a reinvention of it hinges on one's interpretation of community's purpose: is it primarily for mutual surveillance and shared fate, or is it a space for support and self-expression?\n\nThis debate transcends mere nostalgia for a bygone era. If urban environments indeed weaken the incidental connections that once brought diverse individuals together, then the role of public institutions\u2014such as schools, markets, transit systems, and parks\u2014becomes increasingly critical. These spaces serve as the last bastions where strangers are compelled to coexist and interact. Some scholars argue that the vitality of urban community hinges less on the number of friendships one maintains and more on the extent to which city design encourages interactions among disparate groups. In this light, community emerges not solely as an emotional experience but as a spatial phenomenon, shaped by the physical and social architecture of the city itself. Thus, the health of urban life may depend on how effectively it fosters environments where unlike individuals can share space and, by extension, their lives.",
+  "source_name": "urban-community",
+  "topic_tag": "mcat::cars",
+  "questions": [
+   {
+    "stem": "What is the primary argument presented in the passage regarding urban community?",
+    "options": [
+     "Urban life inherently leads to loneliness and isolation.",
+     "Cities allow individuals to choose their communities, which can be both beneficial and limiting.",
+     "Community is solely defined by the number of friendships one has.",
+     "Public institutions are irrelevant to the formation of urban communities."
+    ],
+    "answer_index": 1,
+    "explanation": "The passage argues that cities transform community by allowing individuals to choose their affiliations, which can be beneficial in terms of personal connection but also limiting due to insularity. The other options misinterpret the complexity of the argument or present incorrect assertions about community.",
+    "qtype": "main idea",
+    "supported": true,
+    "reasons": []
+   },
+   {
+    "stem": "According to the passage, how does the design of a city influence community?",
+    "options": [
+     "It determines the number of friends a person can have.",
+     "It can either encourage or discourage interactions among diverse groups.",
+     "It has no impact on community formation.",
+     "It solely focuses on creating spaces for mutual surveillance."
+    ],
+    "answer_index": 1,
+    "explanation": "The passage states that the design of a city plays a crucial role in either fostering or hindering interactions among different groups, which is central to the argument about urban community. The other options either misrepresent the passage or ignore its key points.",
+    "qtype": "inference",
+    "supported": true,
+    "reasons": []
+   },
+   {
+    "stem": "What tone does the author adopt when discussing the transformation of community in urban settings?",
+    "options": [
+     "Nostalgic and critical",
+     "Optimistic and celebratory",
+     "Neutral and analytical",
+     "Dismissive and pessimistic"
+    ],
+    "answer_index": 2,
+    "explanation": "The author maintains a neutral and analytical tone throughout the passage, presenting both sides of the argument regarding urban community without overt emotional bias. The other options suggest a tone that is not supported by the text.",
+    "qtype": "tone/attitude",
+    "supported": true,
+    "reasons": []
+   },
+   {
+    "stem": "If a new urban development project prioritizes mixed-use spaces that encourage diverse interactions, which conclusion can be drawn based on the passage?",
+    "options": [
+     "It will likely lead to increased loneliness among residents.",
+     "It may enhance the sense of community by fostering interactions among different groups.",
+     "It will have no effect on community dynamics.",
+     "It will reinforce existing social enclaves."
+    ],
+    "answer_index": 1,
+    "explanation": "The passage suggests that urban designs that promote interactions among diverse groups can enhance community, making this option the best choice. The other options contradict the passage's argument about the importance of shared spaces in fostering community.",
+    "qtype": "applying the argument",
+    "supported": true,
+    "reasons": []
+   }
+  ]
+ }
+]

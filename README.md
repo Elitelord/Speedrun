@@ -46,16 +46,40 @@ Cloud-AI features on desktop, all **safe by construction** and **fully optional*
 - **Grounded card generation + pre-display eval gate.** Cards are generated from
   **named** MCAT sources (OpenStax CC-BY, Wikipedia CC-BY-SA); anything not
   supported by its source is blocked, and a held-out gold set is graded against a
-  cutoff committed *before* results (beats a keyword baseline; no wrong card
+  cutoff committed _before_ results (beats a keyword baseline; no wrong card
   ships). See **[docs/speedrun/ai/README.md](./docs/speedrun/ai/README.md)** and
   **[eval-report.md](./docs/speedrun/ai/eval-report.md)**.
-- **Free-text production review.** Type an answer → an LLM grades it by meaning →
-  a miss gets a scaffolded hint before the reveal (not a silent flip).
+- **Free-text production review.** Type an answer → an LLM grades it by meaning
+  and **suggests the grade** (Again/Hard/Good/Easy) → a miss gets a scaffolded
+  hint (that never gives the answer away) before a clean reveal — not a silent
+  flip.
+- **CARS module.** Grounded generation of **passage + multiple-choice reasoning**
+  questions (the 4th MCAT section), with its own eval gate and a custom notetype;
+  interleaves alongside the sciences. See
+  **[docs/speedrun/ai/cars/README.md](./docs/speedrun/ai/cars/README.md)**.
 - **AI-off invariant.** With AI disabled (or no key / offline), generation and
   grading abstain, review degrades to the native self-graded reveal, and the
   three scores still compute.
 - **Two-way sync** desktop ↔ Android via Anki's own sync (AnkiWeb or a self-hosted
   server): offline review, sync on reconnect, no lost or double-counted reviews.
+
+### Evidence — every claim is re-runnable
+
+Models are validated, not asserted, and each check is one command
+(**[docs/speedrun/VERIFY.md](./docs/speedrun/VERIFY.md)** maps every claim to its
+command and artifact):
+
+- **Memory calibration** — `just calibration` → reliability chart + Brier / log-loss
+  / ECE (a labelled real+simulated hybrid; honest about limited longitudinal data).
+- **Study-feature ablation** — `just ablation` → interleaving on / off / plain Anki,
+  a pre-registered metric, and the honest null where it makes no difference.
+- **Leakage check** — `just leakage` → no gold test item is a near-copy of its
+  source (so the beat-a-baseline result is real).
+- **AI + CARS eval gates** — held-out gold sets vs pre-registered cutoffs, 2×2
+  confusion matrices with the false-negative cell capped (FN=0).
+- **Model descriptions** — one page each for memory / performance / readiness in
+  **[docs/speedrun/models/](./docs/speedrun/models/)**, including give-up rules and
+  honest limitations.
 
 ## Architecture
 
@@ -142,10 +166,16 @@ exact steps and the emulator setup used.
 
 ## Documentation for this fork
 
+- **[docs/speedrun/VERIFY.md](./docs/speedrun/VERIFY.md)** — every claim mapped to
+  the one command that reproduces it.
 - **[docs/speedrun/rust-change.md](./docs/speedrun/rust-change.md)** — why the
   scheduler change is in Rust and how it works.
-- **[docs/speedrun/DEMO_VIDEO.md](./docs/speedrun/DEMO_VIDEO.md)** — demo +
-  proof-capture recording script.
+- **[docs/speedrun/models/](./docs/speedrun/models/)** — one-page descriptions of
+  the memory / performance / readiness models (with give-up rules + limitations).
+- **[docs/speedrun/eval/](./docs/speedrun/eval/)** — the re-runnable evidence:
+  calibration, interleaving ablation, and leakage-check scripts + reports.
+- **[docs/speedrun/DEMO_VIDEO.md](./docs/speedrun/DEMO_VIDEO.md)** — final demo
+  recording script.
 - **[docs/speedrun/MANUAL_QA.md](./docs/speedrun/MANUAL_QA.md)** — manual QA
   checklist.
 - **[POST_MVP_ROADMAP.md](./POST_MVP_ROADMAP.md)** — AI features (free-text

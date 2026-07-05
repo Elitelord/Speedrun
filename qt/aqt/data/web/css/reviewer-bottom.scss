@@ -82,3 +82,36 @@ button {
         border-top-color: color(border-subtle);
     }
 }
+
+/* Speedrun: a larger, prominent Grade/Show-Answer button, and colour-coded,
+ * chunkier ease buttons so the AI's suggested grade maps visually to a key. */
+#ansbut {
+    font-size: 1.15em;
+    font-weight: 600;
+    padding: 11px 34px;
+    min-width: 180px;
+    border-radius: 8px;
+    background: #1565c0;
+    color: #fff;
+    border: 1px solid #0f4c9c;
+}
+#ansbut:hover {
+    background: #1a72d6;
+}
+
+button[data-ease] {
+    font-size: 1.05em;
+    font-weight: 600;
+    padding: 9px 22px;
+    min-width: 92px;
+    border-radius: 8px;
+    border-top: 3px solid transparent;
+}
+button[data-ease="1"] { border-top-color: #c62828; }
+button[data-ease="2"] { border-top-color: #b26a00; }
+button[data-ease="3"] { border-top-color: #2e7d32; }
+button[data-ease="4"] { border-top-color: #1565c0; }
+
+#defease {
+    box-shadow: 0 0 0 2px var(--focus-color);
+}

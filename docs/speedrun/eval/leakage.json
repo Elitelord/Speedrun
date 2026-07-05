@@ -1,0 +1,24 @@
+{
+  "clean": true,
+  "tracks": [
+    {
+      "track": "recall cards",
+      "checked": 36,
+      "max_overlap": 0.23529411764705882,
+      "mean_overlap": 0.013083566760037349,
+      "flagged": 0,
+      "flagged_items": [],
+      "clean": true
+    },
+    {
+      "track": "CARS questions",
+      "checked": 12,
+      "max_overlap": 0.14285714285714285,
+      "mean_overlap": 0.011904761904761904,
+      "flagged": 0,
+      "flagged_items": [],
+      "clean": true
+    }
+  ],
+  "threshold": 0.5
+}

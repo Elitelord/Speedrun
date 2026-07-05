@@ -49,6 +49,14 @@ def _generated_dir() -> Path:
     return ai_dir() / "generated"
 
 
+def cars_dir() -> Path:
+    return ai_dir() / "cars"
+
+
+def _cars_generated_dir() -> Path:
+    return cars_dir() / "generated"
+
+
 def load_sources() -> list[dict[str, str]]:
     """Read the source manifest: [{file, name, topic}, ...]."""
     manifest = ai_dir() / "sources.json"
@@ -137,6 +145,81 @@ def _load_gold() -> list[dict[str, Any]]:
     return load_gold(ai_dir() / "gold.jsonl")
 
 
+# -- CARS track (passages + multiple-choice reasoning questions) -------------
+
+
+def _load_cars_sources() -> list[dict[str, str]]:
+    return json.loads((cars_dir() / "sources.json").read_text(encoding="utf-8"))
+
+
+def cmd_cars_generate(client: Any) -> int:
+    from .cars import generate_cars, unit_to_dict
+
+    units = []
+    for source in _load_cars_sources():
+        text = (cars_dir() / "source" / source["file"]).read_text(encoding="utf-8")
+        units.extend(generate_cars(text, source["name"], source["topic"], client))
+    out = _cars_generated_dir()
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "units-draft.json").write_text(
+        json.dumps([unit_to_dict(u) for u in units], indent=1), encoding="utf-8"
+    )
+    total_q = sum(len(u.questions) for u in units)
+    grounded_q = sum(len(u.supported_questions) for u in units)
+    print(
+        f"generated {len(units)} CARS passages, {total_q} questions "
+        f"({grounded_q} grounded) -> {out}"
+    )
+    return 0
+
+
+def cmd_cars_eval(client: Any) -> int:
+    from .cars import answer_question
+    from .cars_eval import load_cars_gold, run_cars_eval, write_report
+
+    gold = load_cars_gold(cars_dir() / "gold.jsonl")
+    cutoff = json.loads((cars_dir() / "cutoff.json").read_text(encoding="utf-8"))
+
+    def answer_fn(passage: str, stem: str, options: list[str]) -> Any:
+        return answer_question(passage, stem, options, client)
+
+    result = run_cars_eval(gold, answer_fn, cutoff)
+    (cars_dir() / "cars-eval-result.json").write_text(
+        json.dumps(result, indent=1), encoding="utf-8"
+    )
+    write_report(result, cars_dir() / "cars-eval-report.md")
+    print(json.dumps(result["checks"], indent=1))
+    print("PASSED" if result["passed"] else "FAILED")
+    return 0 if result["passed"] else 1
+
+
+def cmd_cars_emit() -> int:
+    """Write eval-passed CARS units (supported questions only) for the deck
+    builder. Refuses unless the CARS eval passed its cutoff."""
+    result_path = cars_dir() / "cars-eval-result.json"
+    if not result_path.exists():
+        print("no cars-eval-result.json — run `cars-eval` first", file=sys.stderr)
+        return 1
+    if not json.loads(result_path.read_text(encoding="utf-8")).get("passed"):
+        print("CARS eval did not pass the cutoff — refusing to emit", file=sys.stderr)
+        return 1
+    draft_path = _cars_generated_dir() / "units-draft.json"
+    if not draft_path.exists():
+        print("no units-draft.json — run `cars-generate` first", file=sys.stderr)
+        return 1
+    units = json.loads(draft_path.read_text(encoding="utf-8"))
+    emitted = []
+    for u in units:
+        supported = [q for q in u.get("questions", []) if q.get("supported")]
+        if supported:
+            emitted.append({**u, "questions": supported})
+    out = _cars_generated_dir() / "units.json"
+    out.write_text(json.dumps(emitted, indent=1), encoding="utf-8")
+    n_q = sum(len(u["questions"]) for u in emitted)
+    print(f"emitted {len(emitted)} CARS passages, {n_q} grounded questions -> {out}")
+    return 0
+
+
 def _make_bm25_retriever(index: dict[str, Any]) -> Any:
     """Build the BM25 baseline retriever from the index chunks, or None if
     rank_bm25 isn't installed (retrieval comparison then degrades to RAG-only)."""
@@ -174,12 +257,22 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser = argparse.ArgumentParser(prog="speedrun_ai.pipeline", parents=[common])
     sub = parser.add_subparsers(dest="cmd", required=True)
-    for name in ("build-index", "generate", "eval", "emit"):
+    for name in (
+        "build-index",
+        "generate",
+        "eval",
+        "emit",
+        "cars-generate",
+        "cars-eval",
+        "cars-emit",
+    ):
         sub.add_parser(name, parents=[common])
     args = parser.parse_args(argv)
 
     if args.cmd == "emit":
         return cmd_emit()
+    if args.cmd == "cars-emit":
+        return cmd_cars_emit()
     client = _client(args.fake)
     if args.cmd == "build-index":
         return cmd_build_index(client)
@@ -187,6 +280,10 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_generate(client)
     if args.cmd == "eval":
         return cmd_eval(client)
+    if args.cmd == "cars-generate":
+        return cmd_cars_generate(client)
+    if args.cmd == "cars-eval":
+        return cmd_cars_eval(client)
     return 2
 
 

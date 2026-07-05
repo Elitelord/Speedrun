@@ -106,11 +106,17 @@ def get_config() -> AiConfig:
         or env.get("OPEN_AI_API_KEY")
         or ""
     ).strip()
+    # OPENAI_TIMEOUT lets long calls (e.g. CARS passage generation) raise the
+    # per-call limit without changing the short default the reviewer relies on.
+    try:
+        timeout = float(env.get("OPENAI_TIMEOUT", "") or DEFAULT_TIMEOUT)
+    except ValueError:
+        timeout = DEFAULT_TIMEOUT
     return AiConfig(
         api_key=api_key,
         chat_model=env.get("OPENAI_MODEL", DEFAULT_CHAT_MODEL).strip()
         or DEFAULT_CHAT_MODEL,
         embed_model=env.get("OPENAI_EMBED_MODEL", DEFAULT_EMBED_MODEL).strip()
         or DEFAULT_EMBED_MODEL,
-        timeout=DEFAULT_TIMEOUT,
+        timeout=timeout,
     )

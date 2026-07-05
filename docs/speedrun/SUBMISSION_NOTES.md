@@ -27,13 +27,20 @@ by both, so there is no per-platform scheduler code.
   answers not supported by the source are blocked. Pipeline + note:
   `docs/speedrun/ai/README.md`.
 - **Pre-display eval gate** (`docs/speedrun/ai/eval-report.md`, **PASS**): a
-  held-out gold set graded against a cutoff committed *before* results
+  held-out gold set graded against a cutoff committed _before_ results
   (`cutoff.json`, enforced by git history). Good/bad-card 2×2 confusion matrix:
   **FN=0** (no wrong card ships), accuracy 0.972. **Beats the baseline:** embedding
   retrieval ranks the correct source first for every learner-phrased query
   (Recall@1 1.000) vs. the BM25 keyword baseline (0.944); MRR 1.000 vs 0.968.
 - **Free-text production review:** the learner types an answer, an LLM grades it by
-  meaning, a miss gets a scaffolded hint before the reveal.
+  meaning and **suggests the grade** (Again/Hard/Good/Easy), and a miss gets a
+  scaffolded hint (that never reveals the answer) before a clean reveal.
+- **CARS module:** grounded generation of passage + multiple-choice **reasoning**
+  questions (the 4th MCAT section), gated by its own held-out eval
+  (`docs/speedrun/ai/cars/cars-eval-report.md`, **PASS**, FN=0) and interleaved with
+  the sciences.
+- **Leakage check (§7e):** `docs/speedrun/eval/leakage-report.md` — **CLEAN**: no
+  gold test item is a near-copy of its source, so the beat-a-baseline result is real.
 - **AI-off invariant:** with AI disabled (or no key / network down) generation and
   grading abstain, review falls back to the native self-graded reveal, and the
   three scores still compute.
@@ -58,9 +65,14 @@ artifacts (Windows `.msi` + Android `.apk`).
 - Rust core lib tests (`cargo test -p anki --lib`, incl. interleaving unit +
   integration tests): pass.
 - Python suite (`just test-py`, incl. a test that calls the scheduler change): pass.
-- AI subsystem tests (`qt/tests/test_speedrun_ai.py`): 22 passed.
-- AI eval gate (`docs/speedrun/ai/eval-report.md`): **PASS** vs the pre-registered
-  cutoff.
+- AI + CARS subsystem tests (`qt/tests/test_speedrun_{ai,cars}.py`): pass.
+- AI eval gate (`docs/speedrun/ai/eval-report.md`) + CARS eval gate
+  (`docs/speedrun/ai/cars/cars-eval-report.md`): **PASS** vs pre-registered cutoffs.
+- Leakage check (`just leakage`): **CLEAN**.
+- Memory calibration (`just calibration`): Brier / log-loss + reliability chart.
+- Interleaving ablation (`just ablation`): 3 builds, pre-registered metric.
+
+**Every claim → its command:** `docs/speedrun/VERIFY.md`.
 
 **Repositories:**
 
@@ -72,14 +84,14 @@ artifacts (Windows `.msi` + Android `.apk`).
 
 ## Field-by-field cheat sheet
 
-| Form field        | What to put                                                               |
-| ----------------- | ------------------------------------------------------------------------- |
-| Demo Video        | YouTube (Unlisted is fine) or Vimeo URL of the demo+proof video.          |
-| GitHub Repository | The engine/desktop repo (`Elitelord/Speedrun`).                           |
-| Deployed Site URL | The **GitHub Release** page with the `.msi` + `.apk` attached.            |
-| Login credentials | Leave blank — local app, no login.                                        |
-| Brainlift         | `Speedrun_Brainlift_MCAT.pdf` (the version with finalized SPOVs + DOKs).  |
-| Additional Notes  | The block above.                                                          |
+| Form field        | What to put                                                              |
+| ----------------- | ------------------------------------------------------------------------ |
+| Demo Video        | YouTube (Unlisted is fine) or Vimeo URL of the demo+proof video.         |
+| GitHub Repository | The engine/desktop repo (`Elitelord/Speedrun`).                          |
+| Deployed Site URL | The **GitHub Release** page with the `.msi` + `.apk` attached.           |
+| Login credentials | Leave blank — local app, no login.                                       |
+| Brainlift         | `Speedrun_Brainlift_MCAT.pdf` (the version with finalized SPOVs + DOKs). |
+| Additional Notes  | The block above.                                                         |
 
 ## Making the GitHub Release (for the Deployed Site URL)
 

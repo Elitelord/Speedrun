@@ -386,6 +386,7 @@ class Reviewer:
         # (undo re-renders the question, so transient hint state is discarded).
         self._prod_attempt = 0
         self._prod_grading = False
+        self._prod_last_result: aqt.speedrun_ai.GradeResult | None = None
         c = self.card
         # grab the question and play audio
         q = c.question()
@@ -411,6 +412,7 @@ class Reviewer:
         self.web.eval(
             f"_showQuestion({json.dumps(q)}, {json.dumps(a)}, '{bodyclass}');"
         )
+        self._push_study_progress()
         self._update_flag_icon()
         self._update_mark_icon()
         self._showAnswerButton()
@@ -689,9 +691,15 @@ class Reviewer:
         if url == "ans":
             self._getTypedAnswer()
         elif url == "reveal":
-            # Speedrun: user gave up in the free-text loop -> reveal the answer
-            # and let them grade it themselves.
-            self._reveal_with_feedback(1, "")
+            # Speedrun: user chose to reveal in the free-text loop. Carry the AI's
+            # last suggestion (grade + feedback) if they'd already attempted, so
+            # the reveal is still AI-informed rather than a forced "Again".
+            last = self._prod_last_result
+            if last is not None and not last.abstained:
+                ease = self._decide_ease(last.verdict, last.ease, self._prod_attempt)
+                self._reveal_with_feedback(ease, last.feedback, outcome="revealed")
+            else:
+                self._reveal_with_feedback(1, "", outcome="revealed")
         elif url.startswith("ease"):
             val: Literal[1, 2, 3, 4] = int(url[4:])  # type: ignore
             self._answerCard(val)
@@ -813,20 +821,39 @@ class Reviewer:
             buf,
         )
 
+    def _plain_expected_answer_html(self) -> str:
+        """The expected answer shown cleanly (no red/green diff). Used when the
+        free-text loop reveals an answer — the AI already judged the response, so
+        a character-level diff is noise; the learner just wants to see the answer."""
+        return (
+            f"<div class='ai-reveal-answer' style=\"font-family: '{self.typeFont}'; "
+            f'font-size: {self.typeSize}px">{self.typeCorrect}</div>'
+        )
+
     def typeAnsAnswerFilter(self, buf: str) -> str:
         if not self.typeCorrect:
             return re.sub(self.typeAnsPat, "", buf)
+        # Speedrun: in the free-text loop the LLM already graded the answer, so
+        # reveal the expected answer plainly instead of the char-level diff.
+        production = self._production_mode_active()
         if self._synth_typein:
-            # No template marker to replace; append the answer comparison so the
-            # native (AI-off) type-answer diff still renders on synthesized cards.
-            output = self.mw.col.compare_answer(
-                self.typeCorrect, self.typedAnswer or "", self._combining
-            )
-            return buf + (
-                f"<hr id=answer>\n"
-                f"<div style=\"font-family: '{self.typeFont}'; "
-                f'font-size: {self.typeSize}px">{output}</div>'
-            )
+            if production:
+                inner = self._plain_expected_answer_html()
+            else:
+                # native (AI-off) type-answer diff on synthesized cards
+                output = self.mw.col.compare_answer(
+                    self.typeCorrect, self.typedAnswer or "", self._combining
+                )
+                inner = (
+                    f"<div style=\"font-family: '{self.typeFont}'; "
+                    f'font-size: {self.typeSize}px">{output}</div>'
+                )
+            return buf + f"<hr id=answer>\n{inner}"
+        if production:
+            plain = f"<hr id=answer>\n{self._plain_expected_answer_html()}"
+            if re.search(self.typeAnsPat, buf):
+                return re.sub(self.typeAnsPat, lambda _m: plain, buf, count=1)
+            return buf + plain
         m = re.search(self.typeAnsPat, buf)
         type_pattern = m.group(1) if m else ""
         orig = buf
@@ -964,6 +991,7 @@ class Reviewer:
         self, result: aqt.speedrun_ai.GradeResult, attempt: int
     ) -> None:
         self._prod_grading = False
+        self._prod_last_result = result
         if result.abstained:
             # Couldn't ground a grade -> reveal for native self-grade.
             self.web.eval("_setProductionGrading(false);")
@@ -971,47 +999,77 @@ class Reviewer:
             return
         if result.correct:
             self._reveal_with_feedback(
-                self._decide_ease("correct", result.ease, attempt), result.feedback
+                self._decide_ease("correct", result.ease, attempt),
+                result.feedback,
+                outcome="correct",
             )
             return
         if attempt >= self.MAX_PROD_ATTEMPTS:
             self._reveal_with_feedback(
                 self._decide_ease(result.verdict, result.ease, attempt),
                 result.feedback,
+                outcome="incorrect",
             )
             return
         # Wrong, attempts remaining: show a scaffolded hint and let them retry.
         self._render_hint(result.feedback, result.hint)
 
+    _EASE_LABELS = {1: "Again", 2: "Hard", 3: "Good", 4: "Easy"}
+    _EASE_SLUGS = {1: "again", 2: "hard", 3: "good", 4: "easy"}
+
+    def _grade_chip(self, ease: int) -> str:
+        label = self._EASE_LABELS.get(ease, "")
+        slug = self._EASE_SLUGS.get(ease, "")
+        if not label:
+            return ""
+        return (
+            "<div class='ai-suggest'>Suggested grade "
+            f"<span class='ai-grade ai-grade-{slug}'>{label}</span></div>"
+        )
+
+    def _feedback_card(
+        self, state: str, status: str, feedback: str, extra: str = ""
+    ) -> str:
+        # A single feedback card: a large status line, the AI's one-line verdict,
+        # then either a hint/action (retry) or the suggested-grade chip.
+        parts = [f"<div class='ai-card ai-{state}'>"]
+        parts.append(f"<div class='ai-status'>{html.escape(status)}</div>")
+        if feedback:
+            parts.append(f"<div class='ai-verdict'>{html.escape(feedback)}</div>")
+        parts.append(extra)
+        parts.append("</div>")
+        return "".join(parts)
+
     def _render_hint(self, feedback: str, hint: str) -> None:
-        body = (
-            f"<div class='ai-verdict'>{html.escape(feedback)}</div>"
+        extra = (
             f"<div class='ai-hint'>💡 {html.escape(hint)}</div>"
             "<div class='ai-actions'>Refine your answer and press "
             "<b>Grade</b> again, or <a href='#' "
             "onclick=\"pycmd('reveal');return false;\">reveal the answer</a>.</div>"
         )
+        body = self._feedback_card("retry", "Try again", feedback, extra)
         self.web.eval(f"_showProductionFeedback({json.dumps(body)});")
 
-    _EASE_LABELS = {1: "Again", 2: "Hard", 3: "Good", 4: "Easy"}
+    _OUTCOME_STATUS = {
+        "correct": ("correct", "Correct"),
+        "incorrect": ("close", "Not quite"),
+        "revealed": ("revealed", "Answer revealed"),
+    }
 
-    def _reveal_with_feedback(self, ease: int, feedback: str) -> None:
+    def _reveal_with_feedback(
+        self, ease: int, feedback: str, outcome: str = "revealed"
+    ) -> None:
         # Reveal the answer and the AI's verdict, then let the learner choose a
         # grade themselves — we surface the AI's suggestion but never auto-advance,
-        # so they can read the feedback and pick when ready.
+        # so they can read the feedback and pick when ready. The answer shows
+        # plainly (no char diff); the feedback card stays put.
         self.web.eval("_setProductionGrading(false);")
         self._showAnswer()
-        suggested = self._EASE_LABELS.get(ease, "")
-        parts = ""
-        if feedback:
-            parts += f"<div class='ai-verdict'>{html.escape(feedback)}</div>"
-        if suggested:
-            parts += (
-                "<div class='ai-actions'>Suggested grade: "
-                f"<b>{suggested}</b> — pick a button when you're ready.</div>"
-            )
-        if parts:
-            self.web.eval(f"_showProductionFeedback({json.dumps(parts)});")
+        state, status = self._OUTCOME_STATUS.get(
+            outcome, ("revealed", "Answer revealed")
+        )
+        body = self._feedback_card(state, status, feedback, self._grade_chip(ease))
+        self.web.eval(f"_showProductionFeedback({json.dumps(body)});")
 
     # Bottom bar
     ##########################################################################
@@ -1076,6 +1134,37 @@ timerStopped = false;
         self.bottom.web.eval(
             f"showAnswer({json.dumps(middle)}, {json.dumps(conf['stopTimerOnAnswer'])});"
         )
+
+    def _push_study_progress(self) -> None:
+        """Speedrun: drive the thin progress bar at the top of the reviewer.
+
+        Cumulative progress through the studied deck (and its subdecks): cards
+        started (no longer new, ``type != 0``) over total cards. Monotonic and
+        stable across restarts and day rollovers — unlike a per-session bar."""
+        col = self.mw.col
+        try:
+            dids = col.decks.deck_and_child_ids(col.decks.get_current_id())
+        except Exception:
+            return
+        if not dids:
+            return
+        placeholders = ",".join("?" * len(dids))
+        total = (
+            col.db.scalar(
+                f"select count(*) from cards where did in ({placeholders})", *dids
+            )
+            or 0
+        )
+        # type = 0 is a still-new card (never started); anything else was studied.
+        new_remaining = (
+            col.db.scalar(
+                f"select count(*) from cards where did in ({placeholders}) and type = 0",
+                *dids,
+            )
+            or 0
+        )
+        done = max(0, total - new_remaining)
+        self.web.eval(f"_setStudyProgress({done}, {total});")
 
     def _remaining(self) -> str:
         if not self.mw.col.conf["dueCounts"]:
